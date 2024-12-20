@@ -11,52 +11,6 @@ use bevy_simple_text_input::{
     TextInputTextColor, 
     TextInputTextFont,
 };
-
-// fn main() {
-//     App::new()
-//         .add_plugins(DefaultPlugins)
-//         .add_plugins(TextInputPlugin)
-//         .add_systems(Startup, text_input)
-//         .add_systems(Update, focus.before(TextInputSystem))
-//         .run();
-// }
-
-// let font = fonts.style.text.clone();
-// let font_size = fonts.size.md;
-
-// let colors = Display::new();
-
-// parent.spawn((
-//     Node {
-//         border: UiRect::all(Val::Px(1.0)),
-//         height: Val::Px(48.0),
-//         width: Val::Percent(100.0),
-//         align_items: AlignItems::Center,
-//         justify_content: JustifyContent::Start,
-//         padding: UiRect::all(Val::Px(16.0)), 
-//         ..default()
-//     },
-//     BorderColor(colors.outline_secondary),
-//     BorderRadius::all(Val::Px(8.0)),
-// )).with_children(|parent| {
-//     parent.spawn((
-//         Node::default(),
-//         FocusPolicy::Block,
-//         TextInput,
-//         TextInputTextFont(TextFont {
-//             font,
-//             font_size,
-//             ..default()
-//         }),
-//         TextInputTextColor(TextColor(colors.text_primary)),
-//         TextInputPlaceholder {
-//             value: "Address...".to_string(),
-//             ..default()
-//         },
-//         TextInputInactive(true),
-//     ));
-// });
-
 pub fn text_input(
     parent: &mut ChildBuilder,
     fonts: &Res<FontResources>,
@@ -88,7 +42,7 @@ pub fn text_input(
         }),
         TextInputTextColor(TextColor(colors.text_primary)),
         TextInputPlaceholder {
-            value: "Bitcoin address...".to_string(),
+            value: "./root/".to_string(),
             ..default()
         },
         TextInputInactive(true),

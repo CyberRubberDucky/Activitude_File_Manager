@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 mod home;
-mod address;
+mod filemanager;
 
 pub mod primitives { 
     pub mod button; 
@@ -39,7 +39,7 @@ use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
 use crate::primitives::button::button_system;
 
 use crate::home::{OnHomeScreen, home_setup};
-use crate::address::{OnAddressScreen, address_setup};
+use crate::filemanager::{OnAddressScreen, address_setup};
 use crate::components::text_input::focus;
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
@@ -53,7 +53,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
-                title: "orange".into(),
+                title: "Web5 File Manager".into(),
                 ..default()
             }),
             ..default()
@@ -105,7 +105,7 @@ pub fn menu_plugin(app: &mut App) {
 }
 
 pub fn startup_setup(mut menu_state: ResMut<NextState<PageState>>) {
-    menu_state.set(PageState::Home);
+    menu_state.set(PageState::Address);
 }
 
 pub fn menu_action(
