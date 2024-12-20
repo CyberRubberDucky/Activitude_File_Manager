@@ -115,7 +115,7 @@ impl ButtonComponent {
 
         let (height, padding, icon_size, icon_pad, font_size) = match data.size {
             ButtonSize::Large => (48.0, 24.0, 24.0, 12.0, fonts.size.lg),
-            ButtonSize::Medium => (32.0, 12.0, 16.0, 4.0, fonts.size.md)
+            ButtonSize::Medium => (32.0, 12.0, 20.0, 4.0, fonts.size.md)
         };
 
         let mut button = parent.spawn((

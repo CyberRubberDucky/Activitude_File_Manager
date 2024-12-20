@@ -9,6 +9,7 @@ use bevy_simple_text_input::{
     TextInputSystem,
     TextInputTextColor,
     TextInputTextFont,
+    TextInputValue
 };
 
 pub fn text_input(
@@ -23,10 +24,10 @@ pub fn text_input(
     parent.spawn((
         Node {
             border: UiRect::all(Val::Px(1.0)),
-            height: Val::Px(600.0), // Height for larger text input
-            width: Val::Px(500.0), // Width for the input field
-            align_items: AlignItems::Start, // Align text to start (top)
-            justify_content: JustifyContent::Start, // Align text to the left
+            height: Val::Px(48.0), 
+            width: Val::Percent(100.0),
+            align_items: AlignItems::Center, 
+            justify_content: JustifyContent::Start,
             padding: UiRect::all(Val::Px(16.0)),
             ..default()
         },
@@ -38,15 +39,11 @@ pub fn text_input(
         TextInputTextFont(TextFont {
             font,
             font_size,
-
             ..default()
         }),
         TextInputTextColor(TextColor(colors.text_primary)),
-        TextInputPlaceholder {
-            value: "Enter file content...".to_string(),
-            ..default()
-        },
         TextInputInactive(true),
+        TextInputValue("/root/".to_string()),
     ));
 }
 
