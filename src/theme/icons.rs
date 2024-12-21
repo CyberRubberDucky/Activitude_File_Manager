@@ -14,7 +14,9 @@ pub enum Icon {
     Paste,
     Scan,
     File,
-    Folder
+    Folder,
+    Forward,
+    Save,
 }
 
 impl Icon {
@@ -30,6 +32,8 @@ impl Icon {
             Icon::Scan => "qr-code",
             Icon::File => "file",
             Icon::Folder => "folder",
+            Icon::Forward => "forward",
+            Icon::Save => "save",
         };
         let img = format!("icons/{}.png", choice);
         ImageNode::new(asset_server.load(img.as_str()))

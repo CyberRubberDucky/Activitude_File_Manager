@@ -1,70 +1,164 @@
 
 use bevy::{prelude::*, ui::FocusPolicy};
-use crate::theme::fonts::FontResources;
 use crate::theme::color::Display;
-use bevy_simple_text_input::{
-    TextInput,
-    TextInputInactive,
-    TextInputPlaceholder,
-    TextInputPlugin,
-    TextInputSystem,
-    TextInputTextColor,
-    TextInputTextFont,
+
+
+use crate::primitives::button::{
+    CustomButton, 
+    ButtonWidth, 
+    ButtonComponent, 
+    ButtonSize, 
+    InteractiveState, 
+    ButtonStyle, 
+    primary_default,
 };
-pub fn texteditor(
-    parent: &mut ChildBuilder,
+
+
+use crate::FontResources;
+use crate::components::text_editor::text_editor;
+use crate::NavigateTo;
+use crate::theme::icons::Icon;
+
+use bevy::window::PrimaryWindow;
+
+#[derive(Component)]
+pub struct Popup;
+#[derive(Component)]
+pub struct SaveButton;
+
+pub fn popup(
+    mut commands: &mut Commands,
     fonts: &Res<FontResources>,
+    asset_server: &Res<AssetServer>,
 ) {
-    let font = fonts.style.text.clone();
-    let font_size = fonts.size.md;
-
     let colors = Display::new();
+    let save = context_button("Save", InteractiveState::Default, Icon::Save);
 
-    parent.spawn((
+    commands.spawn((
         Node {
-            border: UiRect::all(Val::Px(1.0)),
-            height: Val::Px(48.0),
             width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
-            justify_content: JustifyContent::Start,
-            padding: UiRect::all(Val::Px(16.0)),
+            flex_direction: FlexDirection::Column,
+            position_type: PositionType::Absolute,
             ..default()
         },
-        BorderColor(colors.outline_secondary),
-        BackgroundColor(colors.bg_primary),
-        BorderRadius::all(Val::Px(8.0)),
-        FocusPolicy::Block,
-        TextInput,
-        TextInputTextFont(TextFont {
-            font,
-            font_size,
-            ..default()
-        }),
-        TextInputTextColor(TextColor(colors.text_primary)),
-        TextInputPlaceholder {
-            value: "./root/".to_string(),
-            ..default()
-        },
-        TextInputInactive(true),
-    ));
+        Popup,
+    )).with_children(|parent| {
+        parent.spawn((
+            Node {
+                width: Val::Px(800.0),
+                height: Val::Px(500.0),
+                border: UiRect::all(Val::Px(1.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                position_type: PositionType::Absolute,
+                padding: UiRect {
+                    left: Val::Px(16.0),
+                    right: Val::Px(16.0),
+                    top: Val::Px(16.0),
+                    bottom: Val::Px(16.0)
+                },
+                ..default()
+            },
+            BorderColor(colors.outline_secondary),
+            BackgroundColor(colors.bg_primary),
+            BorderRadius::all(Val::Px(8.0)),
+        )).with_children(|parent| {
+            text_editor(parent, &fonts);
+            spacer(parent);
+            parent.spawn((
+                Node {
+                    width: Val::Percent(100.0),
+                    justify_content: JustifyContent::End,
+                    align_items: AlignItems::End,
+                    ..default()
+                },
+                SaveButton
+            )).with_children(|child| {
+                ButtonComponent::spawn_button(child, &asset_server, &fonts, save);
+            });
+        });
+    });
 }
 
-pub fn focustexteditor(
-    query: Query<(Entity, &Interaction), Changed<Interaction>>,
-    mut text_input_query: Query<(Entity, &mut TextInputInactive, &mut BorderColor)>,
+use crate::components::context::ContextButton;
+
+pub fn menu_handler(
+    mut commands: Commands,
+    fonts: Res<FontResources>,
+    asset_server: Res<AssetServer>,
+
+    mut interaction_query: Query<
+        (&Interaction, &Parent),
+        (Changed<Interaction>, With<Button>),
+    >,
+    query: Query<&ContextButton>,
 ) {
-    let colors = Display::new();
-    for (interaction_entity, interaction) in &query {
-        if *interaction == Interaction::Pressed {
-            for (entity, mut inactive, mut border_color) in &mut text_input_query {
-                if entity == interaction_entity {
-                    inactive.0 = false;
-                    *border_color = colors.outline_primary.into();
-                } else {
-                    inactive.0 = true;
-                    *border_color = colors.outline_secondary.into();
+    for (interaction, parent) in &mut interaction_query {
+        match *interaction {
+            Interaction::Pressed => {
+                if query.get(parent.get()).is_ok() {
+                    popup(&mut commands, &fonts, &asset_server);
                 }
             }
+            _ => {}
         }
     }
+}
+
+
+pub fn save_button(
+    mut commands: Commands,
+    fonts: Res<FontResources>,
+    asset_server: Res<AssetServer>,
+    mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
+
+    mut interaction_query: Query<
+        (&Interaction, &Parent),
+        (Changed<Interaction>, With<Button>),
+    >,
+    query: Query<&SaveButton>,
+) {
+    for (interaction, parent) in &mut interaction_query {
+        match *interaction {
+            Interaction::Pressed => {
+                if query.get(parent.get()).is_ok() {
+                    for (entity, node, children) in popup_query.iter_mut() {
+                        for child in children.iter() {
+                            commands.entity(*child).despawn_recursive();
+                        }
+                        commands.entity(entity).despawn_recursive();
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+}
+
+pub fn spacer (parent: &mut ChildBuilder) {
+    parent.spawn(Node {
+        width: Val::Percent(100.0),
+        height: Val::Percent(100.0),
+        ..default()
+    });
+}
+
+fn context_button (label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
+    CustomButton::new(
+        label,
+        Some(icon),
+        None,
+        ButtonStyle::Secondary,
+        ButtonWidth::Hug,
+        ButtonSize::Medium,
+        status,
+        NavigateTo::Address,
+        JustifyContent::Center,
+        true,
+        false,
+    )
 }

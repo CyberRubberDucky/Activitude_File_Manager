@@ -11,6 +11,7 @@ bevy_ui = "0.15.0"
 rand = "0.8.5"
 bevy = "0.15.0"
 bevy_simple_text_input = "0.10.0"
+bevy_cosmic_edit = "0.26.0"
 
 [lib]
 crate-type = [

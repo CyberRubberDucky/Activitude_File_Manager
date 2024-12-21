@@ -33,6 +33,7 @@ use crate::components::{
     text_input::text_input,
     navigator::sidebar_navigator,
     tip_button::tip_buttons,
+    text_editor::text_editor
 };
 
 
@@ -48,7 +49,11 @@ use bevy_simple_text_input::{
 pub struct OnAddressScreen;
 
 
-pub fn address_setup(mut commands: Commands, asset_server: Res<AssetServer>, fonts: Res<FontResources>) {
+pub fn address_setup(
+    mut commands: Commands, 
+    asset_server: Res<AssetServer>, 
+    fonts: Res<FontResources>,
+) {
 
     let colors = Display::new();
     let bumper = Bumper::new();
@@ -62,10 +67,11 @@ pub fn address_setup(mut commands: Commands, asset_server: Res<AssetServer>, fon
 
         parent.spawn((interface.page_node, Interaction::None)).with_children(|parent| {
             header(parent, &fonts, &asset_server, Header::Home, "Activitude File Manager");
-
             parent.spawn(interface.content).with_children(|parent| { 
                 text_input(parent, &fonts);
+                
             });
         });
     });
 }
+
