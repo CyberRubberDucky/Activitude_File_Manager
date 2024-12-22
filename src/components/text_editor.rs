@@ -5,8 +5,6 @@ use bevy_simple_text_input::{
     TextInput,
     TextInputInactive,
     TextInputPlaceholder,
-    TextInputPlugin,
-    TextInputSystem,
     TextInputTextColor,
     TextInputTextFont,
     TextInputValue,
@@ -61,12 +59,12 @@ pub fn text_editor(
 
 pub fn listener(
     mut events: EventReader<TextInputSubmitEvent>,
-    mut query: Query<(&mut TextInputValue), With<TextEditor>>, 
+    mut query: Query<&mut TextInputValue, With<TextEditor>>, 
 ) {
     for event in events.read() {
-        for (mut text_input) in &mut query {
+        for mut text_input in &mut query {
             text_input.0 = event.value.clone();
-            text_input.0.push_str("\n");
+            text_input.0.push('\n');
         }
     }
 }

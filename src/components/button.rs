@@ -198,17 +198,17 @@ pub fn button_system(
                     Interaction::Hovered => {
                         let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Hover);
                         *color = colors.background.into();
-                        border_color.0 = colors.outline.into();
+                        border_color.0 = colors.outline;
                     }
                     Interaction::None => {
                         let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Default);
                         *color = colors.background.into();
-                        border_color.0 = colors.outline.into();
+                        border_color.0 = colors.outline;
                     }
                     Interaction::Pressed => {
                         let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Selected);
                         *color = colors.background.into();
-                        border_color.0 = colors.outline.into();
+                        border_color.0 = colors.outline;
                     }
                 }
             }
@@ -217,7 +217,7 @@ pub fn button_system(
 }
 
 pub fn primary_default(label: &str, enabled: bool, navigate_to: NavigateTo) -> CustomButton {
-    return CustomButton::new(
+    CustomButton::new(
         label,
         None,
         None,
@@ -229,11 +229,11 @@ pub fn primary_default(label: &str, enabled: bool, navigate_to: NavigateTo) -> C
         JustifyContent::Center,
         enabled,
         false,
-    );
+    )
 }
 
 pub fn secondary_default(label: &str, icon: Icon, navigate_to: NavigateTo) -> CustomButton {
-    return CustomButton::new(
+    CustomButton::new(
         label,
         Some(icon),
         None,
@@ -245,5 +245,5 @@ pub fn secondary_default(label: &str, icon: Icon, navigate_to: NavigateTo) -> Cu
         JustifyContent::Center,
         true,
         false,
-    );
+    )
 }

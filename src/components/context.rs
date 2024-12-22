@@ -1,30 +1,19 @@
 use bevy::prelude::*;
-use bevy_ui::prelude::*;
 use bevy::input::mouse::MouseButton;
-
-use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
-use crate::interface::button::button_system;
-
-use crate::filemanager::{OnFileManagerScreen, manager};
-use crate::components::text_input::focus;
-use crate::components::text_editor::listener;
 use crate::theme::color::Display;
 
-use crate::interface::button::{
+use crate::components::button::{
     CustomButton, 
     ButtonWidth, 
     ButtonComponent, 
     ButtonSize, 
-    InteractiveState, 
-    ButtonStyle, 
-    primary_default,
+    InteractiveState,
+    ButtonStyle
 };
-
 
 use crate::FontResources;
 use crate::NavigateTo;
 use crate::theme::icons::Icon;
-
 use bevy::window::PrimaryWindow;
 
 #[derive(Component)]
@@ -35,13 +24,10 @@ pub struct ContextButton;
 pub fn context_menu(
     mut commands: Commands,
     fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>, 
-
+    asset_server: Res<AssetServer>,
     query_window: Query<&Window, With<PrimaryWindow>>,
     mouse_button: Res<ButtonInput<MouseButton>>,
-
     mut context_menu_query: Query<(Entity, &Node, &Children), With<ContextMenu>>,
-    mut interaction_query: Query<&mut Node, Without<ContextMenu>>,
 ) {
     let window = query_window.single();
     let colors = Display::new();
@@ -74,8 +60,10 @@ pub fn context_menu(
                     BorderRadius::all(Val::Px(8.0)),
                     ContextMenu,
                 )).with_children(|child| {
+
                     ButtonComponent::spawn_button(child, &asset_server, &fonts, delete);
                     ButtonComponent::spawn_button(child, &asset_server, &fonts, folder);
+
                     child.spawn((
                         Node {
                             width: Val::Percent(100.0),
@@ -84,16 +72,16 @@ pub fn context_menu(
                         },
                         BackgroundColor(colors.outline_secondary),
                     ));
+
                     child.spawn((
                         Node {
                             width: Val::Percent(100.0),
                             ..default()
                         },
-                        ContextButton
+                        ContextButton,
                     )).with_children(|parent| {
                         ButtonComponent::spawn_button(parent, &asset_server, &fonts, file);
                     });
-                    
                 });
             }
         }
@@ -103,13 +91,13 @@ pub fn context_menu(
                 let left = match node.left {
                     Val::Px(x) => x,
                     Val::Percent(p) => p * window.width(),
-                    _ => 0.0, 
+                    _ => 0.0,
                 };
 
                 let top = match node.top {
                     Val::Px(y) => y,
                     Val::Percent(p) => p * window.height(),
-                    _ => 0.0, 
+                    _ => 0.0,
                 };
 
                 let right = left + match node.width {
@@ -144,7 +132,7 @@ fn contains(rect: &Rect, point: Vec2) -> bool {
     point.x >= rect.min.x && point.x <= rect.max.x && point.y >= rect.min.y && point.y <= rect.max.y
 }
 
-fn context_button (label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
+fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
         Some(icon),
@@ -156,6 +144,6 @@ fn context_button (label: &str, status: InteractiveState, icon: Icon) -> CustomB
         NavigateTo::None,
         JustifyContent::Start,
         true,
-        false
+        false,
     )
 }

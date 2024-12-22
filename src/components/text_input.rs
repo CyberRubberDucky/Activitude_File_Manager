@@ -4,9 +4,6 @@ use crate::theme::color::Display;
 use bevy_simple_text_input::{
     TextInput,
     TextInputInactive,
-    TextInputPlaceholder,
-    TextInputPlugin,
-    TextInputSystem,
     TextInputTextColor,
     TextInputTextFont,
     TextInputValue

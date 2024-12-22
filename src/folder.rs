@@ -1,14 +1,6 @@
-use bevy::{prelude::*, ui::FocusPolicy};
-
-
-use crate::theme::{
-    color::Display,
-    fonts::FontResources,
-    icons::Icon,
-};
+use bevy::prelude::*;
 
 use std::collections::HashMap;
-
 
 #[derive(Component)]
 pub struct FolderName(pub String);

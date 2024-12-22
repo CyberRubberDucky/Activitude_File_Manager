@@ -1,4 +1,4 @@
-use bevy::{prelude::*, ui::FocusPolicy};
+use bevy::prelude::*;
 
 
 use crate::theme::{
@@ -10,12 +10,10 @@ use crate::theme::{
 use crate::components::text_input::SearchBar;
 use bevy_simple_text_input::TextInputValue;
 use bevy_simple_text_input::TextInput;
-use crate::file_manager::folder::FolderUISection;
-use crate::file_manager::folder::FolderName;
-use crate::file_manager::folder::FileName;
-use crate::file_manager::object::object;
+use crate::folder::FolderUISection;
+use crate::folder::FolderName;
+use crate::folder::FileName;
 use crate::Folder;
-use crate::RootNode;
 use crate::FolderState;
 
 use crate::components::popup::popup;
@@ -26,7 +24,6 @@ pub fn display_files_and_folders(
     fonts: &Res<FontResources>,
     asset_server: &Res<AssetServer>,
 ) {
-    let colors = Display::new();
 
     let column_node = Node {
         margin: UiRect::all(Val::Px(5.0)),
@@ -47,7 +44,7 @@ pub fn display_files_and_folders(
         ..default()
     };
 
-    if let Some(parent_name) = &folder.parent_name {
+    if let Some(_parent_name) = &folder.parent_name {
         parent.spawn(column_node.clone())
         .insert(Button)
         .insert(FolderName(". .".to_string()))
@@ -58,7 +55,7 @@ pub fn display_files_and_folders(
 
     parent.spawn(row_node.clone())
     .with_children(|parent| {
-        for (name, file) in &folder.files {
+        for (name, _file) in &folder.files {
             parent.spawn(column_node.clone())
             .insert(FileName(name.clone()))
             .insert(Button)
@@ -67,7 +64,7 @@ pub fn display_files_and_folders(
             });
         }
 
-        for (name, subfolder) in &folder.subfolders {
+        for (name, _subfolder) in &folder.subfolders {
             parent
             .spawn(row_node.clone())
             .insert(Button)
@@ -99,7 +96,6 @@ pub fn button_interaction_system(
     mut interaction_query: Query<(&Interaction, &FolderName), (Changed<Interaction>, With<Button>)>,
     mut file_query: Query<(&Interaction, &FileName), (Changed<Interaction>, With<Button>)>,
     mut folder_state: ResMut<FolderState>,
-    root_node: Res<RootNode>,
     mut commands: Commands,
     root: Res<Folder>,
     fonts: Res<FontResources>,
@@ -116,7 +112,7 @@ pub fn button_interaction_system(
                         if let Some(parent_folder) = root.find_folder(parent_name) {
                             update_folder_ui(&mut commands, folder_ui_section.0, parent_folder, &fonts, &asset_server);
                             let path = parent_folder.get_path(&root);
-                            for (entity, mut text_input) in &mut query {
+                            for (_entity, mut text_input) in &mut query {
                                 text_input.0 = format!("/{}/", path.clone());
                             }
                         }
@@ -127,7 +123,7 @@ pub fn button_interaction_system(
                 if let Some(folder) = root.find_folder(&folder_name.0) {
                     update_folder_ui(&mut commands, folder_ui_section.0, folder, &fonts, &asset_server);
                     let path = folder.get_path(&root);
-                    for (entity, mut text_input) in &mut query {
+                    for (_entity, mut text_input) in &mut query {
                         text_input.0 = format!("/{}/", path.clone());
                     }
                 }
@@ -149,4 +145,39 @@ pub fn button_interaction_system(
         }
     }
     
+}
+
+pub fn object (
+    parent: &mut ChildBuilder, 
+    asset_server: &Res<AssetServer>,
+    fonts: &Res<FontResources>,
+    name: &str,
+    variant: &str,
+) {
+    let colors = Display::new();
+
+    let icon = if variant == "Folder" {
+        Icon::Folder
+    } else {
+        Icon::File
+    };
+
+    parent.spawn((
+        Icon::new(icon, asset_server),
+        Node {
+            height: Val::Px(72.0),
+            width: Val::Px(72.0),
+            ..default()
+        },
+    ));
+
+    parent.spawn((
+        Text::new(name),
+        TextFont {
+            font: fonts.style.text.clone(),
+            font_size: fonts.size.md,
+            ..default()
+        },
+        TextColor(colors.text_heading),
+    ));
 }

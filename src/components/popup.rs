@@ -1,8 +1,7 @@
 
-use bevy::{prelude::*, ui::FocusPolicy};
+use bevy::prelude::*;
 use crate::theme::color::Display;
-use crate::interface::header::{header, Header};
-use crate::interface::button::{CustomButton, ButtonWidth, ButtonComponent, ButtonSize, InteractiveState, ButtonStyle, primary_default};
+use crate::components::button::{CustomButton, ButtonWidth, ButtonComponent, ButtonSize, InteractiveState, ButtonStyle};
 use crate::FontResources;
 use crate::components::text_editor::text_editor;
 use crate::components::context::ContextButton;
@@ -17,15 +16,20 @@ pub struct SaveButton;
 pub struct CancelButton;
 
 pub fn popup(
-    mut commands: &mut Commands,
+    commands: &mut Commands,
     fonts: &Res<FontResources>,
     asset_server: &Res<AssetServer>,
     name: &str,
     content: &str,
 ) {
     let colors = Display::new();
+
+    // ==== Define Buttons ==== //
+
     let save = context_button("Save", InteractiveState::Default, Icon::Save);
     let cancel = context_button("Cancel", InteractiveState::Default, Icon::Exit);
+
+    // ==== Screen Container ==== //
 
     commands.spawn((
         Node {
@@ -39,6 +43,9 @@ pub fn popup(
         },
         Popup,
     )).with_children(|parent| {
+
+        // ==== Popup ==== //
+
         parent.spawn((
             Node {
                 width: Val::Px(800.0),
@@ -61,8 +68,10 @@ pub fn popup(
             BackgroundColor(colors.bg_primary),
             BorderRadius::all(Val::Px(8.0)),
         )).with_children(|parent| {
-            header(parent, &fonts, &asset_server, Header::File, name);
-            text_editor(parent, &fonts, content);
+            small_header(parent, fonts, name);
+            text_editor(parent, fonts, content);
+
+            // ==== Buttons ==== //
 
             parent.spawn((
                 Node {
@@ -74,18 +83,23 @@ pub fn popup(
                     ..default()
                 },
             )).with_children(|parent| {
+
+                // ==== Cancel Button ==== //
+
                 parent.spawn((
                     Node::default(),
                     CancelButton,
                 )).with_children(|child| {
-                    ButtonComponent::spawn_button(child, &asset_server, &fonts, cancel);
+                    ButtonComponent::spawn_button(child, asset_server, fonts, cancel);
                 });
+
+                // ==== Save Button ==== //
 
                 parent.spawn((
                     Node::default(),
                     SaveButton,
                 )).with_children(|child| {
-                    ButtonComponent::spawn_button(child, &asset_server, &fonts, save);
+                    ButtonComponent::spawn_button(child, asset_server, fonts, save);
                 });
             });
         });
@@ -110,8 +124,6 @@ pub fn menu_handler(
 
 pub fn save_button(
     mut commands: Commands,
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
     mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
     mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
     s_query: Query<&SaveButton>,
@@ -132,14 +144,6 @@ pub fn save_button(
     }
 }
 
-pub fn spacer(parent: &mut ChildBuilder) {
-    parent.spawn(Node {
-        width: Val::Percent(100.0),
-        height: Val::Percent(100.0),
-        ..default()
-    });
-}
-
 fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
@@ -154,4 +158,34 @@ fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomBu
         true,
         false,
     )
+}
+
+
+pub fn small_header (
+    parent: &mut ChildBuilder,
+    fonts: &Res<FontResources>,
+    title: &str, 
+) {
+    let colors = Display::new();
+
+    let node = Node {
+        width: Val::Percent(100.0),
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        flex_direction: FlexDirection::Row,
+        padding: UiRect::all(Val::Px(12.0)),
+        ..default()
+    };
+
+    parent.spawn(node).with_children(|parent| {
+        parent.spawn((
+            Text::new(title),
+            TextFont {
+                font: fonts.style.heading.clone(),
+                font_size: fonts.size.h4,
+                ..default()
+            },
+            TextColor(colors.text_heading),
+        ));
+    });
 }

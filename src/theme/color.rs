@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::str::FromStr;
 use bevy_ui::prelude::*;
 
-use crate::interface::button::{InteractiveState, ButtonStyle};
+use crate::components::button::{InteractiveState, ButtonStyle};
 
 
 /* -------- DISPLAY -------- */
@@ -24,6 +24,12 @@ pub struct Display {
     pub status_success: Color,
     pub status_warning: Color,
     pub status_danger: Color,
+}
+
+impl Default for Display {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Display {
