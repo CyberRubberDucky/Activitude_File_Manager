@@ -11,7 +11,8 @@ use crate::theme::{
 
 pub enum Header {
     Home,
-    Stack
+    Stack,
+    File
 }
 
 pub fn header(
@@ -25,7 +26,6 @@ pub fn header(
 
     let header_node = Node {
         width: Val::Percent(100.0),
-        height: Val::Px(88.0),
         align_items: AlignItems::Start,
         justify_content: JustifyContent::SpaceBetween,
         flex_direction: FlexDirection::Row,
@@ -33,17 +33,33 @@ pub fn header(
         ..default()
     };
 
+    let small_header_node = Node {
+        width: Val::Percent(100.0),
+        align_items: AlignItems::Start,
+        justify_content: JustifyContent::SpaceBetween,
+        flex_direction: FlexDirection::Row,
+        padding: UiRect::all(Val::Px(12.0)),
+        ..default()
+    };
+
     match header_type {
         Header::Home => {
-            parent.spawn((header_node)).with_children(|parent| {
+            parent.spawn(header_node).with_children(|parent| {
                 header_icon(None, parent, &asset_server);
                 header_title(title, fonts.size.h3, parent, &fonts);
                 header_icon(None, parent, &asset_server);
             });
         },
         Header::Stack => {
-            parent.spawn((header_node)).with_children(|parent| { 
+            parent.spawn(header_node).with_children(|parent| { 
                 header_icon(Some(Icon::Left), parent, &asset_server);
+                header_title(title, fonts.size.h4, parent, &fonts);
+                header_icon(None, parent, &asset_server);
+            });
+        },
+        Header::File => {
+            parent.spawn(small_header_node).with_children(|parent| { 
+                header_icon(None, parent, &asset_server);
                 header_title(title, fonts.size.h4, parent, &fonts);
                 header_icon(None, parent, &asset_server);
             });

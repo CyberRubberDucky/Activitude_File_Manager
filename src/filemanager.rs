@@ -107,5 +107,5 @@ pub fn manager(
 
     commands.insert_resource(RootNode(Some(root_node)));
     commands.insert_resource(root);
-    commands.insert_resource(FolderState::default());
+    commands.insert_resource(FolderState::new());
 }

@@ -31,6 +31,8 @@ pub fn text_editor(
         Node {
             border: UiRect::all(Val::Px(1.0)),
             width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            max_height: Val::Px(1000.0),
             align_items: AlignItems::Start, 
             justify_content: JustifyContent::Start,
             padding: UiRect::all(Val::Px(16.0)),
@@ -39,7 +41,7 @@ pub fn text_editor(
         TextEditor,
         BorderColor(colors.outline_secondary),
         BackgroundColor(colors.bg_primary),
-        BorderRadius::all(Val::Px(8.0)),
+        BorderRadius::all(Val::Px(4.0)),
         FocusPolicy::Block,
         TextInput,
         TextInputTextFont(TextFont {
@@ -59,10 +61,10 @@ pub fn text_editor(
 
 pub fn listener(
     mut events: EventReader<TextInputSubmitEvent>,
-    mut query: Query<(&TextInput, &mut TextInputValue), With<TextEditor>>, 
+    mut query: Query<(&mut TextInputValue), With<TextEditor>>, 
 ) {
     for event in events.read() {
-        for (entity, mut text_input) in &mut query {
+        for (mut text_input) in &mut query {
             text_input.0 = event.value.clone();
             text_input.0.push_str("\n");
         }

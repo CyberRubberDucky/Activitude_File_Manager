@@ -28,6 +28,14 @@ pub struct FolderState {
     pub current_folder: String,
 }
 
+impl FolderState {
+    pub fn new() -> Self {
+        FolderState {
+            current_folder: "root".to_string(),
+        }
+    }
+}
+
 #[derive(Default, Resource)]
 pub struct RootNode(pub Option<Entity>);
 

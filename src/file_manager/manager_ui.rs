@@ -140,8 +140,13 @@ pub fn button_interaction_system(
                 if let Some(file) = folder.get_file(&file_name.0) {
                     println!("File: {:?}", file);
                     popup(&mut commands, &fonts, &asset_server, &file.name, &file.content);
+                } else {
+                    println!("File not found: {:?}", file_name.0);
                 }
+            } else {
+                println!("Cannot Find Current Folder: {:?}", folder_state.current_folder);
             }
         }
     }
+    
 }
