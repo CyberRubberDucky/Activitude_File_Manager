@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use std::str::FromStr;
 use bevy_ui::prelude::*;
 
-use crate::primitives::button::{InteractiveState, ButtonStyle};
+use crate::interface::button::{InteractiveState, ButtonStyle};
 
 
 /* -------- DISPLAY -------- */

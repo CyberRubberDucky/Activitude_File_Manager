@@ -12,6 +12,9 @@ use bevy_simple_text_input::{
     TextInputValue
 };
 
+#[derive(Component)]
+pub struct SearchBar;
+
 pub fn text_input(
     parent: &mut ChildBuilder,
     fonts: &Res<FontResources>,
@@ -36,6 +39,7 @@ pub fn text_input(
         BorderRadius::all(Val::Px(8.0)),
         FocusPolicy::Block,
         TextInput,
+        SearchBar,
         TextInputTextFont(TextFont {
             font,
             font_size,

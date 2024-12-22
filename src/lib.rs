@@ -2,9 +2,6 @@
 
 mod filemanager;
 
-pub mod primitives { 
-    pub mod button;
-}
 
 pub mod theme { 
     pub mod icons; 
@@ -20,9 +17,15 @@ pub mod components {
 }
 
 pub mod interface {
-    pub mod bumper;
     pub mod header;
     pub mod interfaces;
+    pub mod button;
+}
+
+pub mod file_manager {
+    pub mod folder;
+    pub mod manager_ui;
+    pub mod object;
 }
 
 use bevy::prelude::*;
@@ -36,8 +39,8 @@ use theme::{
 
 use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
 use crate::components::popup::save_button;
-use crate::primitives::button::button_system;
-use crate::filemanager::{OnFileManagerScreen, manager, FolderState, Folder, RootNode, button_interaction_system};
+use crate::interface::button::button_system;
+use crate::filemanager::{OnFileManagerScreen, manager};
 use crate::components::text_input::focus;
 use crate::components::text_editor::listener;
 use crate::components::context::context_menu;
@@ -45,7 +48,12 @@ use crate::components::popup::menu_handler;
 use crate::theme::color::Display;
 use crate::theme::fonts::FontResources;
 
-use crate::primitives::button::{
+use crate::file_manager::folder::FolderState;
+use crate::file_manager::folder::Folder;
+use crate::file_manager::folder::RootNode;
+use crate::file_manager::manager_ui::{button_interaction_system};
+
+use crate::interface::button::{
     CustomButton, 
     ButtonWidth, 
     ButtonComponent, 

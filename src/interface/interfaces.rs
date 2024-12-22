@@ -8,9 +8,9 @@ use crate::theme::{
 };
 
 use crate::NavigateTo;
-use crate::primitives::button::primary_default;
-use crate::primitives::button::ButtonComponent;
-use crate::primitives::button::CustomButton;
+use crate::interface::button::primary_default;
+use crate::interface::button::ButtonComponent;
+use crate::interface::button::CustomButton;
 
 pub struct Interface {
     pub node: Node,

@@ -3,14 +3,14 @@ use bevy_ui::prelude::*;
 use bevy::input::mouse::MouseButton;
 
 use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
-use crate::primitives::button::button_system;
+use crate::interface::button::button_system;
 
 use crate::filemanager::{OnFileManagerScreen, manager};
 use crate::components::text_input::focus;
 use crate::components::text_editor::listener;
 use crate::theme::color::Display;
 
-use crate::primitives::button::{
+use crate::interface::button::{
     CustomButton, 
     ButtonWidth, 
     ButtonComponent, 

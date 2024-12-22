@@ -20,6 +20,7 @@ pub struct TextEditor;
 pub fn text_editor(
     parent: &mut ChildBuilder,
     fonts: &Res<FontResources>,
+    content: &str,
 ) {
     let font = fonts.style.text.clone();
     let font_size = fonts.size.md;
@@ -48,7 +49,7 @@ pub fn text_editor(
         }),
         TextInputTextColor(TextColor(colors.text_primary)),
         TextInputInactive(true),
-        TextInputValue("".to_string()),
+        TextInputValue(content.to_string()),
         TextInputPlaceholder {
             value: "Write to file...".to_string(),
             ..default()

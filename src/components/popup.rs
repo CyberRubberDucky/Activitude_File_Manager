@@ -1,9 +1,10 @@
 
 use bevy::{prelude::*, ui::FocusPolicy};
 use crate::theme::color::Display;
+use crate::interface::header::header;
+use crate::interface::header::Header;
 
-
-use crate::primitives::button::{
+use crate::interface::button::{
     CustomButton, 
     ButtonWidth, 
     ButtonComponent, 
@@ -16,6 +17,7 @@ use crate::primitives::button::{
 
 use crate::FontResources;
 use crate::components::text_editor::text_editor;
+use crate::components::context::ContextButton;
 use crate::NavigateTo;
 use crate::theme::icons::Icon;
 
@@ -30,6 +32,8 @@ pub fn popup(
     mut commands: &mut Commands,
     fonts: &Res<FontResources>,
     asset_server: &Res<AssetServer>,
+    name: &str,
+    content: &str,
 ) {
     let colors = Display::new();
     let save = context_button("Save", InteractiveState::Default, Icon::Save);
@@ -54,6 +58,7 @@ pub fn popup(
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(16.0),
                 position_type: PositionType::Absolute,
                 padding: UiRect {
                     left: Val::Px(16.0),
@@ -67,7 +72,8 @@ pub fn popup(
             BackgroundColor(colors.bg_primary),
             BorderRadius::all(Val::Px(8.0)),
         )).with_children(|parent| {
-            text_editor(parent, &fonts);
+            text_editor(parent, &fonts, &name);
+            text_editor(parent, &fonts, &content);
             spacer(parent);
             parent.spawn((
                 Node {
@@ -84,13 +90,11 @@ pub fn popup(
     });
 }
 
-use crate::components::context::ContextButton;
 
 pub fn menu_handler(
     mut commands: Commands,
     fonts: Res<FontResources>,
     asset_server: Res<AssetServer>,
-
     mut interaction_query: Query<
         (&Interaction, &Parent),
         (Changed<Interaction>, With<Button>),
@@ -101,7 +105,7 @@ pub fn menu_handler(
         match *interaction {
             Interaction::Pressed => {
                 if query.get(parent.get()).is_ok() {
-                    popup(&mut commands, &fonts, &asset_server);
+                    popup(&mut commands, &fonts, &asset_server, "", "");
                 }
             }
             _ => {}
