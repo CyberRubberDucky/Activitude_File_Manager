@@ -8,9 +8,6 @@ use crate::theme::{
     icons::Icon,
 };
 
-use crate::primitives::{
-    profile_photo::profile_photo
-};
 
 use crate::NavigateTo;
 
@@ -153,14 +150,6 @@ impl ButtonComponent {
                         ..default()
                     },
                 ));
-            }
-            if let Some(photo) = data.photo {
-                button.spawn(Node {
-                    margin: UiRect::right(Val::Px(icon_pad)), 
-                    ..default()
-                }).with_children(|parent| {
-                    profile_photo(parent, &fonts, &asset_server, &photo);
-                });
             }
 
             button.spawn((

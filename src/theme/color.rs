@@ -136,7 +136,7 @@ impl ButtonColor {
                 outline: Colors::transparent().shade0,
             },
             (ButtonStyle::Ghost, InteractiveState::Hover) => ButtonColor {
-                background: Colors::transparent().shade0,
+                background: Colors::transparent().shade950,
                 label: Colors::tapa().shade100,
                 outline: Colors::transparent().shade0,
             },

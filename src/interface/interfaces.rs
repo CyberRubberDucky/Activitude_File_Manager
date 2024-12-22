@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::primitives::profile_photo::profile_photo;
 use std::sync::Arc;
 
 use crate::theme::{

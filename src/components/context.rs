@@ -5,8 +5,7 @@ use bevy::input::mouse::MouseButton;
 use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
 use crate::primitives::button::button_system;
 
-use crate::home::{OnHomeScreen, home_setup};
-use crate::filemanager::{OnAddressScreen, address_setup};
+use crate::filemanager::{OnFileManagerScreen, manager};
 use crate::components::text_input::focus;
 use crate::components::text_editor::listener;
 use crate::theme::color::Display;
@@ -57,6 +56,7 @@ pub fn context_menu(
 
                 let folder = context_button("Create Folder", InteractiveState::Default, Icon::Folder);
                 let file = context_button("Create File", InteractiveState::Default, Icon::File);
+                let delete = context_button("Delete", InteractiveState::Default, Icon::Exit);
 
                 commands.spawn((
                     Node {
@@ -74,6 +74,7 @@ pub fn context_menu(
                     BorderRadius::all(Val::Px(8.0)),
                     ContextMenu,
                 )).with_children(|child| {
+                    ButtonComponent::spawn_button(child, &asset_server, &fonts, delete);
                     ButtonComponent::spawn_button(child, &asset_server, &fonts, folder);
                     child.spawn((
                         Node {
@@ -152,7 +153,7 @@ fn context_button (label: &str, status: InteractiveState, icon: Icon) -> CustomB
         ButtonWidth::Expand,
         ButtonSize::Medium,
         status,
-        NavigateTo::Address,
+        NavigateTo::None,
         JustifyContent::Start,
         true,
         false

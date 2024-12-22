@@ -156,7 +156,7 @@ fn context_button (label: &str, status: InteractiveState, icon: Icon) -> CustomB
         ButtonWidth::Hug,
         ButtonSize::Medium,
         status,
-        NavigateTo::Address,
+        NavigateTo::None,
         JustifyContent::Center,
         true,
         false,

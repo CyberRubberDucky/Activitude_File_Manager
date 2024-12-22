@@ -1,12 +1,9 @@
 #![allow(unused)]
 
-mod home;
 mod filemanager;
 
-
 pub mod primitives { 
-    pub mod button; 
-    pub mod profile_photo;
+    pub mod button;
 }
 
 pub mod theme { 
@@ -16,11 +13,8 @@ pub mod theme {
 }
 
 pub mod components {
-    pub mod balance_display;
-    pub mod navigator; 
     pub mod text_input;
     pub mod text_editor;
-    pub mod tip_button;
     pub mod context;
     pub mod popup;
 }
@@ -43,14 +37,13 @@ use theme::{
 use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
 use crate::components::popup::save_button;
 use crate::primitives::button::button_system;
-
-use crate::home::{OnHomeScreen, home_setup};
-use crate::filemanager::{OnAddressScreen, address_setup};
+use crate::filemanager::{OnFileManagerScreen, manager, FolderState, Folder, RootNode, button_interaction_system};
 use crate::components::text_input::focus;
 use crate::components::text_editor::listener;
 use crate::components::context::context_menu;
 use crate::components::popup::menu_handler;
 use crate::theme::color::Display;
+use crate::theme::fonts::FontResources;
 
 use crate::primitives::button::{
     CustomButton, 
@@ -104,37 +97,37 @@ fn despawn_screen<T: Component>(to_despawn: Query<Entity, With<T>>, mut commands
 
 #[derive(Component)]
 pub enum NavigateTo {
-    Home,
-    Address,
+    FileManager,
+    None,
 }
 
 #[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
 pub enum PageState {
-    Home,
-    Address,
+    FileManager,
     #[default]
     Disabled,
 }
-use crate::theme::fonts::FontResources;
 
 pub fn menu_plugin(app: &mut App) {
     app
         .init_state::<PageState>()
         .add_systems(OnEnter(GameState::Menu), startup_setup)
-        .add_systems(OnEnter(PageState::Home), home_setup)
-        .add_systems(OnExit(PageState::Home), despawn_screen::<OnHomeScreen>)
-        .add_systems(OnEnter(PageState::Address), address_setup)
-        .add_systems(OnExit(PageState::Address), despawn_screen::<OnAddressScreen>)
+        .add_systems(OnEnter(PageState::FileManager), manager)
+        .add_systems(OnExit(PageState::FileManager), despawn_screen::<OnFileManagerScreen>)
         .add_systems(PreStartup, setup_fonts)
         .add_systems(Update, button_system)
         .add_systems(Update, context_menu)
         .add_systems(Update, menu_handler)
         .add_systems(Update, save_button)
+        .insert_resource(RootNode::default())
+        .insert_resource(Folder::default())
+        .insert_resource(FolderState::default())
+        .add_systems(Update, button_interaction_system)
         .add_systems(Update, (menu_action, button_system).run_if(in_state(GameState::Menu)));
 }
 
 pub fn startup_setup(mut menu_state: ResMut<NextState<PageState>>) {
-    menu_state.set(PageState::Address);
+    menu_state.set(PageState::FileManager);
 }
 
 pub fn menu_action(
@@ -149,8 +142,8 @@ pub fn menu_action(
     for (interaction, menu_button_action) in &interaction_query {
         if *interaction == Interaction::Pressed {
             match menu_button_action {
-                NavigateTo::Home => menu_state.set(PageState::Home),
-                NavigateTo::Address => menu_state.set(PageState::Address)
+                NavigateTo::FileManager => menu_state.set(PageState::FileManager),
+                _ => {}
             }
         }
     }

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use crate::primitives::profile_photo::profile_photo;
 use std::sync::Arc;
 
 use crate::NavigateTo;
@@ -78,7 +77,7 @@ pub fn header_icon(
 ){
     let colors = Display::new();
     if let Some(icon) = icon { 
-        icon_button(parent, &asset_server, icon, NavigateTo::Home);
+        icon_button(parent, &asset_server, icon, NavigateTo::None);
     } else {
         parent.spawn((
             Node {
