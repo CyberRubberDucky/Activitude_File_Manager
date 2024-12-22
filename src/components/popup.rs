@@ -190,13 +190,11 @@ pub fn popup_b_system(
                     if let Some(file_name) = &folder_state.current_file_name {
                         if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
                             current_folder.files.remove(file_name);
-                            println!("Deleted file: {}", file_name);
                         }
                     } else {
                         let folder_name = folder_state.current_folder.clone();
                         if let Some(current_folder) = root.find_folder_mut(&folder_name) {
                             current_folder.subfolders.remove(&folder_name);
-                            println!("Deleted folder: {}", folder_name);
                         }
                     }
                 }
@@ -211,6 +209,7 @@ pub fn popup_b_system(
                 }
 
                 // ==== Update UI  ===== //
+
                 if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
                     update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
                 }
