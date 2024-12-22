@@ -24,12 +24,12 @@ use theme::{
     fonts::setup_fonts,
 };
 
-use crate::components::popup::save_button;
+use crate::components::popup::popup_b_system;
 use crate::filemanager::{OnFileManagerScreen, manager};
 use crate::components::text_input::focus;
 use crate::components::text_editor::listener;
-use crate::components::context::context_menu;
-use crate::components::popup::menu_handler;
+use crate::components::context::{context_menu, new_system};
+// use crate::components::popup::menu_handler;
 use crate::theme::fonts::FontResources;
 use crate::folder::{FolderState, Folder, RootNode};
 use crate::manager_ui::button_interaction_system;
@@ -93,15 +93,34 @@ pub fn menu_plugin(app: &mut App) {
         .add_systems(PreStartup, setup_fonts)
         .add_systems(Update, button_system)
         .add_systems(Update, context_menu)
-        .add_systems(Update, menu_handler)
-        .add_systems(Update, save_button)
+        .add_systems(Update, popup_b_system)
+        .add_systems(Update, new_system)
         .insert_resource(RootNode::default())
         .insert_resource(Folder::default())
         .insert_resource(FolderState::default())
         .add_systems(Update, button_interaction_system)
-        .add_systems(Update, button_system.run_if(in_state(GameState::Menu)));
+        .add_systems(Update, (menu_action, button_system).run_if(in_state(GameState::Menu)));
 }
 
 pub fn startup_setup(mut menu_state: ResMut<NextState<PageState>>) {
     menu_state.set(PageState::FileManager);
+}
+
+pub fn menu_action(
+    interaction_query: Query<
+        (&Interaction, &NavigateTo),
+        (Changed<Interaction>, With<Button>),
+    >,
+    mut app_exit_events: EventWriter<AppExit>,
+    mut menu_state: ResMut<NextState<PageState>>,
+    mut game_state: ResMut<NextState<GameState>>,
+) {
+    for (interaction, menu_button_action) in &interaction_query {
+        if *interaction == Interaction::Pressed {
+            match menu_button_action {
+                NavigateTo::FileManager => menu_state.set(PageState::FileManager),
+                _ => {}
+            }
+        }
+    }
 }

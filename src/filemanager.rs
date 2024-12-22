@@ -25,7 +25,11 @@ pub fn manager(
         content: "Rust is awesome!".to_string(),
     });
 
-    let mut subfolder = Folder::new("subfolder", Some("root".to_string()));
+    let mut subfolder = Folder::new(
+        "Folder 1", 
+        Some("root".to_string())
+    );
+
     subfolder.add_file(File {
         name: "file4.txt".to_string(),
         content: "Subfolder file!".to_string(),

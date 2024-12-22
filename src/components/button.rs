@@ -8,9 +8,6 @@ use crate::theme::{
     icons::Icon,
 };
 
-
-use crate::NavigateTo;
-
 #[derive(Copy, Clone, Component, Debug)]
 pub enum ButtonStyle {
     Primary,
@@ -45,7 +42,6 @@ pub struct CustomButton {
     width_style: ButtonWidth,
     size: ButtonSize,
     state: InteractiveState,
-    action: NavigateTo,
     alignment: JustifyContent,
     enabled: bool,
     selected: bool,
@@ -60,7 +56,6 @@ impl CustomButton {
         width_style: ButtonWidth,
         size: ButtonSize,
         state: InteractiveState,
-        action: NavigateTo,
         alignment: JustifyContent,
         enabled: bool,
         selected: bool,
@@ -73,7 +68,6 @@ impl CustomButton {
             width_style,
             size,
             state,
-            action,
             alignment,
             enabled,
             selected,
@@ -135,8 +129,7 @@ impl ButtonComponent {
             },
             BorderColor(colors.outline),
             BorderRadius::MAX,
-            BackgroundColor(colors.background),
-            data.action,
+            BackgroundColor(colors.background)
         ));
         
         button.with_children(|button| {
@@ -216,23 +209,7 @@ pub fn button_system(
     }
 }
 
-pub fn primary_default(label: &str, enabled: bool, navigate_to: NavigateTo) -> CustomButton {
-    CustomButton::new(
-        label,
-        None,
-        None,
-        ButtonStyle::Primary,
-        ButtonWidth::Expand,
-        ButtonSize::Large,
-        InteractiveState::Default,
-        navigate_to,
-        JustifyContent::Center,
-        enabled,
-        false,
-    )
-}
-
-pub fn secondary_default(label: &str, icon: Icon, navigate_to: NavigateTo) -> CustomButton {
+pub fn secondary_default(label: &str, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
         Some(icon),
@@ -241,8 +218,22 @@ pub fn secondary_default(label: &str, icon: Icon, navigate_to: NavigateTo) -> Cu
         ButtonWidth::Hug,
         ButtonSize::Medium,
         InteractiveState::Default,
-        navigate_to,
         JustifyContent::Center,
+        true,
+        false,
+    )
+}
+
+pub fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
+    CustomButton::new(
+        label,
+        Some(icon),
+        None,
+        ButtonStyle::Ghost,
+        ButtonWidth::Expand,
+        ButtonSize::Medium,
+        status,
+        JustifyContent::Start,
         true,
         false,
     )

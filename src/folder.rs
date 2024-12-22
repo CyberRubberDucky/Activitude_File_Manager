@@ -18,12 +18,14 @@ pub struct File {
 #[derive(Default, Resource)]
 pub struct FolderState {
     pub current_folder: String,
+    pub current_file_name: Option<String>,
 }
 
 impl FolderState {
     pub fn new() -> Self {
         FolderState {
             current_folder: "root".to_string(),
+            current_file_name: None,
         }
     }
 }
@@ -70,6 +72,10 @@ impl Folder {
         self.files.get(name)
     }
 
+    pub fn get_file_mut(&mut self, name: &str) -> Option<&mut File> {
+        self.files.get_mut(name)
+    }
+
     pub fn get_subfolder(&self, name: &str) -> Option<&Folder> {
         self.subfolders.get(name)
     }
@@ -87,6 +93,20 @@ impl Folder {
 
         for subfolder in self.subfolders.values() {
             if let Some(found) = subfolder.find_folder(name) {
+                return Some(found);
+            }
+        }
+
+        None
+    }
+
+    pub fn find_folder_mut(&mut self, name: &str) -> Option<&mut Folder> {
+        if self.name == name {
+            return Some(self);
+        }
+
+        for subfolder in self.subfolders.values_mut() {
+            if let Some(found) = subfolder.find_folder_mut(name) {
                 return Some(found);
             }
         }

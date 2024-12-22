@@ -3,23 +3,26 @@ use bevy::input::mouse::MouseButton;
 use crate::theme::color::Display;
 
 use crate::components::button::{
-    CustomButton, 
-    ButtonWidth, 
     ButtonComponent, 
-    ButtonSize, 
     InteractiveState,
-    ButtonStyle
+    context_button
 };
 
 use crate::FontResources;
-use crate::NavigateTo;
 use crate::theme::icons::Icon;
 use bevy::window::PrimaryWindow;
+use crate::folder::File;
+use crate::FolderState;
+use crate::folder::FolderUISection;
+use crate::manager_ui::update_folder_ui;
+use crate::Folder;
 
 #[derive(Component)]
 pub struct ContextMenu;
 #[derive(Component)]
-pub struct ContextButton;
+pub struct NewFileButton;
+#[derive(Component)]
+pub struct NewFolderButton;
 
 pub fn context_menu(
     mut commands: Commands,
@@ -28,6 +31,8 @@ pub fn context_menu(
     query_window: Query<&Window, With<PrimaryWindow>>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     mut context_menu_query: Query<(Entity, &Node, &Children), With<ContextMenu>>,
+    mut root: ResMut<Folder>, // Access the root folder to delete items
+    mut folder_state: ResMut<FolderState>, // Access the current folder state
 ) {
     let window = query_window.single();
     let colors = Display::new();
@@ -40,6 +45,7 @@ pub fn context_menu(
                     cursor_position.x / window.width(),
                 );
 
+                // Add buttons for Create Folder, Create File, and Delete
                 let folder = context_button("Create Folder", InteractiveState::Default, Icon::Folder);
                 let file = context_button("Create File", InteractiveState::Default, Icon::File);
                 let delete = context_button("Delete", InteractiveState::Default, Icon::Exit);
@@ -61,9 +67,18 @@ pub fn context_menu(
                     ContextMenu,
                 )).with_children(|child| {
 
-                    ButtonComponent::spawn_button(child, &asset_server, &fonts, delete);
-                    ButtonComponent::spawn_button(child, &asset_server, &fonts, folder);
+                    // ==== Create Folder Button ===== //
+                    child.spawn((
+                        Node {
+                            width: Val::Percent(100.0),
+                            ..default()
+                        },
+                        NewFolderButton,
+                    )).with_children(|parent| {
+                        ButtonComponent::spawn_button(parent, &asset_server, &fonts, folder);
+                    });
 
+                    // ==== Separator ===== //
                     child.spawn((
                         Node {
                             width: Val::Percent(100.0),
@@ -73,12 +88,13 @@ pub fn context_menu(
                         BackgroundColor(colors.outline_secondary),
                     ));
 
+                    // ==== Create File Button ===== //
                     child.spawn((
                         Node {
                             width: Val::Percent(100.0),
                             ..default()
                         },
-                        ContextButton,
+                        NewFileButton,
                     )).with_children(|parent| {
                         ButtonComponent::spawn_button(parent, &asset_server, &fonts, file);
                     });
@@ -86,64 +102,65 @@ pub fn context_menu(
             }
         }
 
+        // ==== Handle Left Click to Select Delete Option ===== //
         if mouse_button.just_pressed(MouseButton::Left) {
             for (entity, node, children) in context_menu_query.iter_mut() {
-                let left = match node.left {
-                    Val::Px(x) => x,
-                    Val::Percent(p) => p * window.width(),
-                    _ => 0.0,
-                };
-
-                let top = match node.top {
-                    Val::Px(y) => y,
-                    Val::Percent(p) => p * window.height(),
-                    _ => 0.0,
-                };
-
-                let right = left + match node.width {
-                    Val::Px(w) => w,
-                    Val::Percent(p) => p * window.width(),
-                    _ => 0.0,
-                };
-
-                let bottom = top + match node.height {
-                    Val::Px(h) => h,
-                    Val::Percent(p) => p * window.height(),
-                    _ => 0.0,
-                };
-
-                let context_menu_rect = Rect {
-                    min: Vec2::new(left, top),
-                    max: Vec2::new(right, bottom),
-                };
-
-                if !contains(&context_menu_rect, cursor_position) {
-                    for child in children.iter() {
-                        commands.entity(*child).despawn_recursive();
-                    }
-                    commands.entity(entity).despawn_recursive();
+                for child in children.iter() {
+                    commands.entity(*child).despawn_recursive();
                 }
+                commands.entity(entity).despawn_recursive();
             }
         }
     }
 }
 
-fn contains(rect: &Rect, point: Vec2) -> bool {
-    point.x >= rect.min.x && point.x <= rect.max.x && point.y >= rect.min.y && point.y <= rect.max.y
-}
+pub fn new_system(
+    mut commands: Commands,
+    fonts: Res<FontResources>,
+    asset_server: Res<AssetServer>,
+    mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
+    file_query: Query<&NewFileButton>,
+    folder_query: Query<&NewFolderButton>,
+    mut root: ResMut<Folder>,
+    mut folder_state: ResMut<FolderState>,
+    folder_ui_section: Res<FolderUISection>,
+) {
+    for (interaction, parent) in &mut interaction_query {
+        if let Interaction::Pressed = *interaction {
 
-fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
-    CustomButton::new(
-        label,
-        Some(icon),
-        None,
-        ButtonStyle::Ghost,
-        ButtonWidth::Expand,
-        ButtonSize::Medium,
-        status,
-        NavigateTo::None,
-        JustifyContent::Start,
-        true,
-        false,
-    )
+            // ==== On File Creation ===== //
+
+            if file_query.get(parent.get()).is_ok() {
+                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+
+                    // ==== Generate Name ===== //
+
+                    let new_file_name = format!("file{}.txt", current_folder.files.len() + 1);
+
+                    // ==== Add file to Current Folder ===== //
+
+                    current_folder.add_file(File {
+                        name: new_file_name.clone(),
+                        content: String::new(),
+                    });
+
+                    // ==== Update UI ===== //
+
+                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
+                }
+            }
+
+            // ==== On Folder Creation ===== //
+
+            if folder_query.get(parent.get()).is_ok() {
+                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+                    let new_folder_name = format!("folder {}", current_folder.subfolders.len() + 1);
+
+                    current_folder.add_subfolder(Folder::new(&new_folder_name, Some(folder_state.current_folder.clone())));
+
+                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
+                }
+            }
+        }
+    }
 }

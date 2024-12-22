@@ -40,7 +40,7 @@ impl Display {
             
             outline_primary: Colors::tapa().shade0,
             outline_secondary: Colors::tapa().shade700,
-            outline_tint: Colors::transparent().shade300,
+            outline_tint: Colors::transparent().shade700,
             
             text_heading: Colors::tapa().shade0,
             text_primary: Colors::tapa().shade100,

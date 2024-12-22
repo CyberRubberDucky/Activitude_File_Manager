@@ -4,9 +4,19 @@ use crate::theme::color::Display;
 use crate::components::button::{CustomButton, ButtonWidth, ButtonComponent, ButtonSize, InteractiveState, ButtonStyle};
 use crate::FontResources;
 use crate::components::text_editor::text_editor;
-use crate::components::context::ContextButton;
-use crate::NavigateTo;
+use crate::components::context::NewFileButton;
+use crate::components::context::NewFolderButton;
+use bevy_simple_text_input::TextInputValue;
+use crate::components::text_editor::TextEditor;
+
+use crate::manager_ui::update_folder_ui;
+use crate::folder::FolderUISection;
+
 use crate::theme::icons::Icon;
+
+use crate::folder::File;
+use crate::Folder;
+use crate::FolderState;
 
 #[derive(Component)]
 pub struct Popup;
@@ -14,6 +24,8 @@ pub struct Popup;
 pub struct SaveButton;
 #[derive(Component)]
 pub struct CancelButton;
+#[derive(Component)]
+pub struct DeleteButton;
 
 pub fn popup(
     commands: &mut Commands,
@@ -21,13 +33,15 @@ pub fn popup(
     asset_server: &Res<AssetServer>,
     name: &str,
     content: &str,
+    file: &File,
 ) {
     let colors = Display::new();
 
     // ==== Define Buttons ==== //
 
-    let save = context_button("Save", InteractiveState::Default, Icon::Save);
-    let cancel = context_button("Cancel", InteractiveState::Default, Icon::Exit);
+    let save = popup_button("Save", InteractiveState::Default, Icon::Save);
+    let cancel = popup_button("Cancel", InteractiveState::Default, Icon::Exit);
+    let delete = popup_button("Delete", InteractiveState::Default, Icon::Delete);
 
     // ==== Screen Container ==== //
 
@@ -68,7 +82,12 @@ pub fn popup(
             BackgroundColor(colors.bg_primary),
             BorderRadius::all(Val::Px(8.0)),
         )).with_children(|parent| {
+            // ==== Header ==== //
+
             small_header(parent, fonts, name);
+
+            // ==== Text Input ==== //
+
             text_editor(parent, fonts, content);
 
             // ==== Buttons ==== //
@@ -83,6 +102,24 @@ pub fn popup(
                     ..default()
                 },
             )).with_children(|parent| {
+
+                // ==== Delete Button ==== //
+
+                parent.spawn((
+                    Node::default(),
+                    DeleteButton,
+                )).with_children(|child| {
+                    ButtonComponent::spawn_button(child, asset_server, fonts, delete);
+                });
+
+                // ==== Spacer ==== //
+
+                parent.spawn((
+                    Node {
+                        width: Val::Percent(100.0),
+                        ..default()
+                    },
+                ));
 
                 // ==== Cancel Button ==== //
 
@@ -101,50 +138,90 @@ pub fn popup(
                 )).with_children(|child| {
                     ButtonComponent::spawn_button(child, asset_server, fonts, save);
                 });
+
             });
         });
     });
 }
 
-pub fn menu_handler(
-    mut commands: Commands,
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
-    mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
-    query: Query<&ContextButton>,
-) {
-    for (interaction, parent) in &mut interaction_query {
-        if let Interaction::Pressed = *interaction {
-            if query.get(parent.get()).is_ok() {
-                popup(&mut commands, &fonts, &asset_server, "", "");
-            }
-        }
-    }
-}
-
-pub fn save_button(
+pub fn popup_b_system(
     mut commands: Commands,
     mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
     mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
     s_query: Query<&SaveButton>,
     c_query: Query<&CancelButton>,
+    delete_query: Query<&DeleteButton>, 
+    mut query: Query<&mut TextInputValue, With<TextEditor>>,
+    mut root: ResMut<Folder>, 
+    folder_state: ResMut<FolderState>,
+    folder_ui_section: Res<FolderUISection>, 
+    fonts: Res<FontResources>,
+    asset_server: Res<AssetServer>,
 ) {
     for (interaction, parent) in &mut interaction_query {
         if let Interaction::Pressed = *interaction {
-            if s_query.get(parent.get()).is_ok() || c_query.get(parent.get()).is_ok() {
-                println!("{}", if s_query.get(parent.get()).is_ok() { "Saving" } else { "Cancel" });
+            if s_query.get(parent.get()).is_ok() || c_query.get(parent.get()).is_ok() || delete_query.get(parent.get()).is_ok() {
+                if s_query.get(parent.get()).is_ok() {
+
+                    // ==== Saving File ===== //
+
+                    for mut text_input in &mut query {
+
+                        // ==== Get Text Input ===== //
+
+                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+                            if let Some(file_name) = &folder_state.current_file_name {
+                                if let Some(file) = current_folder.get_file_mut(file_name) {
+
+                                    // ==== Set File Content To Text Input ===== //
+
+                                    file.content = text_input.0.clone();
+                                }
+                            }
+                        }
+                    }
+                } else if c_query.get(parent.get()).is_ok() {
+
+                    // ==== Cancel (Do nothing) ===== //
+                } else if delete_query.get(parent.get()).is_ok() {
+
+                    // ==== Deleting File or Folder ===== //
+
+                    if let Some(file_name) = &folder_state.current_file_name {
+                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+                            current_folder.files.remove(file_name);
+                            println!("Deleted file: {}", file_name);
+                        }
+                    } else {
+                        let folder_name = folder_state.current_folder.clone();
+                        if let Some(current_folder) = root.find_folder_mut(&folder_name) {
+                            current_folder.subfolders.remove(&folder_name);
+                            println!("Deleted folder: {}", folder_name);
+                        }
+                    }
+                }
+
+                // ==== Close File Popup ===== //
+
                 for (entity, _, children) in popup_query.iter_mut() {
                     for child in children.iter() {
                         commands.entity(*child).despawn_recursive();
                     }
                     commands.entity(entity).despawn_recursive();
                 }
+
+                // ==== Update UI  ===== //
+                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
+                }
             }
         }
     }
 }
 
-fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
+
+
+fn popup_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
         Some(icon),
@@ -153,13 +230,11 @@ fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomBu
         ButtonWidth::Hug,
         ButtonSize::Medium,
         status,
-        NavigateTo::None,
         JustifyContent::Center,
         true,
         false,
     )
 }
-
 
 pub fn small_header (
     parent: &mut ChildBuilder,
