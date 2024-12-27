@@ -66,6 +66,12 @@ pub fn context_menu(
                     child.spawn((
                         Node {
                             width: EXPAND,
+                            padding: UiRect{
+                                left: (Val::Px(4.0)),
+                                right: (Val::Px(4.0)),
+                                top: (Val::Px(4.0)),
+                                bottom: (Val::Px(4.0)),
+                            },
                             ..default()
                         },
                         NewFolderButton,
@@ -89,6 +95,12 @@ pub fn context_menu(
                     child.spawn((
                         Node {
                             width: EXPAND,
+                            padding: UiRect{
+                                left: (Val::Px(4.0)),
+                                right: (Val::Px(4.0)),
+                                top: (Val::Px(4.0)),
+                                bottom: (Val::Px(4.0)),
+                            },
                             ..default()
                         },
                         NewFileButton,

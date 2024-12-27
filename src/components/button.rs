@@ -35,24 +35,6 @@ pub struct CustomButton {
     alignment: JustifyContent,
 }
 
-impl CustomButton {
-    pub fn new(
-        label: &str,
-        icon: Icon,
-        style: ButtonStyle,
-        width_style: ButtonWidth,
-        alignment: JustifyContent,
-    ) -> Self {
-        Self {
-            label: label.to_string(),
-            icon,
-            style,
-            width_style,
-            alignment,
-        }
-    }
-}
-
 pub struct ButtonComponent;
 
 impl ButtonComponent {
@@ -128,21 +110,21 @@ impl ButtonComponent {
 }
 
 pub fn default_button(label: &str, icon: Icon) -> CustomButton {
-    CustomButton::new(
-        label,
+    CustomButton {
+        label: label.to_string(),
         icon,
-        ButtonStyle::Secondary,
-        ButtonWidth::Hug,
-        JustifyContent::Center,
-    )
+        style: ButtonStyle::Secondary,
+        width_style: ButtonWidth::Hug,
+        alignment: JustifyContent::Center,
+    }
 }
 
 pub fn context_button(label: &str, icon: Icon) -> CustomButton {
-    CustomButton::new(
-        label,
+    CustomButton {
+        label: label.to_string(),
         icon,
-        ButtonStyle::Ghost,
-        ButtonWidth::Expand,
-        JustifyContent::Start,
-    )
+        style: ButtonStyle::Ghost,
+        width_style: ButtonWidth::Expand,
+        alignment: JustifyContent::Start,
+    }
 }

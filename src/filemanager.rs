@@ -55,7 +55,7 @@ pub fn manager(
 ) {
 
     let colors = Display::new();
-    let mut root = Folder::new("root", None);
+    let root = Folder::new("root", None);
     let mut folder_ui_section: Option<FolderUISection> = None;
 
     let interface = Node {
