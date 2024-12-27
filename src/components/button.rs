@@ -1,5 +1,3 @@
-#![allow(unused)]
-
 use bevy::prelude::*;
 
 use crate::theme::{
@@ -23,11 +21,6 @@ pub enum InteractiveState {
     Disabled,
 }
 
-pub enum ButtonSize {
-    Medium,
-    Large,
-}
-
 #[derive(PartialEq)]
 pub enum ButtonWidth {
     Expand,
@@ -36,41 +29,26 @@ pub enum ButtonWidth {
 
 pub struct CustomButton {
     label: String,
-    icon: Option<Icon>,
-    photo: Option<String>,
+    icon: Icon,
     style: ButtonStyle,
     width_style: ButtonWidth,
-    size: ButtonSize,
-    state: InteractiveState,
     alignment: JustifyContent,
-    enabled: bool,
-    selected: bool,
 }
 
 impl CustomButton {
     pub fn new(
         label: &str,
-        icon: Option<Icon>,
-        photo: Option<String>,
+        icon: Icon,
         style: ButtonStyle,
         width_style: ButtonWidth,
-        size: ButtonSize,
-        state: InteractiveState,
         alignment: JustifyContent,
-        enabled: bool,
-        selected: bool,
     ) -> Self {
         Self {
             label: label.to_string(),
             icon,
-            photo,
             style,
             width_style,
-            size,
-            state,
             alignment,
-            enabled,
-            selected,
         }
     }
 }
@@ -84,17 +62,7 @@ impl ButtonComponent {
         fonts: &Res<FontResources>,
         data: CustomButton,
     ) {
-        let mut status = InteractiveState::Default;
-        
-        if data.enabled {
-            if data.state == InteractiveState::Selected {
-                status = InteractiveState::Selected;
-            } else {
-                status = InteractiveState::Default;
-            }
-        } else {
-            status = InteractiveState::Disabled;
-        }
+        let status = InteractiveState::Default;
 
         let colors: ButtonColor = ButtonColor::new(data.style, status);
         let font = fonts.style.label.clone();
@@ -104,12 +72,9 @@ impl ButtonComponent {
             ButtonWidth::Hug => (Val::Auto, 0.0),
         };
 
-        let (height, padding, icon_size, icon_pad, font_size) = match data.size {
-            ButtonSize::Large => (48.0, 24.0, 24.0, 12.0, fonts.size.lg),
-            ButtonSize::Medium => (32.0, 12.0, 20.0, 4.0, fonts.size.md)
-        };
+        let (height, padding, icon_size, icon_pad, font_size) = (32.0, 12.0, 20.0, 4.0, fonts.size.md);
 
-        let mut button = parent.spawn((
+        parent.spawn((
             Button,
             Node {
                 flex_grow,
@@ -129,21 +94,24 @@ impl ButtonComponent {
             },
             BorderColor(colors.outline),
             BorderRadius::MAX,
-            BackgroundColor(colors.background)
-        ));
-        
-        button.with_children(|button| {
-            if let Some(icon) = data.icon {
-                button.spawn((
-                    Icon::new(data.icon.unwrap(), asset_server),
-                    Node {
-                        height: Val::Px(icon_size),
-                        width: Val::Px(icon_size),
-                        margin: UiRect::right(Val::Px(icon_pad)), 
-                        ..default()
-                    },
-                ));
-            }
+            BackgroundColor(colors.background),
+            data.style,
+            status,
+        )).with_children(|button| {
+
+            // === Spawn Icon === //
+
+            button.spawn((
+                Icon::new(data.icon, asset_server),
+                Node {
+                    height: Val::Px(icon_size),
+                    width: Val::Px(icon_size),
+                    margin: UiRect::right(Val::Px(icon_pad)), 
+                    ..default()
+                },
+            ));
+
+            // === Spawn Label === //
 
             button.spawn((
                 Text::new(data.label),
@@ -156,85 +124,25 @@ impl ButtonComponent {
             ));     
         });
 
-        button.insert(data.style);
-        button.insert(status);
-        if data.selected { button.insert(Selectable); }
     }
 }
 
-
-#[derive(Component)]
-pub struct ButtonInteraction {
-    pub state: InteractiveState,
-    pub is_selected: bool,
-}
-
-#[derive(Component)]
-pub struct Selectable;
-
-pub fn button_system(
-    mut interaction_query: Query<
-        (
-            &Interaction,
-            &mut BackgroundColor,
-            &mut BorderColor,
-            Option<&ButtonStyle>,
-            &InteractiveState,
-        ),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    for (interaction, mut color, mut border_color, button_style, state) in &mut interaction_query {
-        if *state != InteractiveState::Disabled && *state != InteractiveState::Selected {
-            if let Some(button_style) = button_style {
-                match *interaction {
-                    Interaction::Hovered => {
-                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Hover);
-                        *color = colors.background.into();
-                        border_color.0 = colors.outline;
-                    }
-                    Interaction::None => {
-                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Default);
-                        *color = colors.background.into();
-                        border_color.0 = colors.outline;
-                    }
-                    Interaction::Pressed => {
-                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Selected);
-                        *color = colors.background.into();
-                        border_color.0 = colors.outline;
-                    }
-                }
-            }
-        }
-    }
-}
-
-pub fn secondary_default(label: &str, icon: Icon) -> CustomButton {
+pub fn default_button(label: &str, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
-        Some(icon),
-        None,
+        icon,
         ButtonStyle::Secondary,
         ButtonWidth::Hug,
-        ButtonSize::Medium,
-        InteractiveState::Default,
         JustifyContent::Center,
-        true,
-        false,
     )
 }
 
-pub fn context_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
+pub fn context_button(label: &str, icon: Icon) -> CustomButton {
     CustomButton::new(
         label,
-        Some(icon),
-        None,
+        icon,
         ButtonStyle::Ghost,
         ButtonWidth::Expand,
-        ButtonSize::Medium,
-        status,
         JustifyContent::Start,
-        true,
-        false,
     )
 }

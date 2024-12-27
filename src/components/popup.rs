@@ -1,22 +1,19 @@
-
 use bevy::prelude::*;
 use crate::theme::color::Display;
-use crate::components::button::{CustomButton, ButtonWidth, ButtonComponent, ButtonSize, InteractiveState, ButtonStyle};
+use crate::components::button::ButtonComponent;
+use crate::components::button::default_button;
 use crate::FontResources;
-use crate::components::text_editor::text_editor;
-use crate::components::context::NewFileButton;
-use crate::components::context::NewFolderButton;
-use bevy_simple_text_input::TextInputValue;
-use crate::components::text_editor::TextEditor;
-
-use crate::manager_ui::update_folder_ui;
-use crate::folder::FolderUISection;
-
 use crate::theme::icons::Icon;
+use bevy::ui::FocusPolicy;
 
-use crate::folder::File;
-use crate::Folder;
-use crate::FolderState;
+use bevy_simple_text_input::{
+    TextInput,
+    TextInputInactive,
+    TextInputPlaceholder,
+    TextInputTextColor,
+    TextInputTextFont,
+    TextInputValue,
+};
 
 #[derive(Component)]
 pub struct Popup;
@@ -26,6 +23,50 @@ pub struct SaveButton;
 pub struct CancelButton;
 #[derive(Component)]
 pub struct DeleteButton;
+#[derive(Component)]
+pub struct TextEditor;
+
+pub fn text_editor(
+    parent: &mut ChildBuilder,
+    fonts: &Res<FontResources>,
+    content: &str,
+) {
+    let font = fonts.style.text.clone();
+    let font_size = fonts.size.md;
+
+    let colors = Display::new();
+
+    parent.spawn((
+        Node {
+            border: UiRect::all(Val::Px(1.0)),
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            max_height: Val::Px(1000.0),
+            align_items: AlignItems::Start, 
+            justify_content: JustifyContent::Start,
+            padding: UiRect::all(Val::Px(16.0)),
+            ..default()
+        },
+        TextEditor,
+        BorderColor(colors.outline_secondary),
+        BackgroundColor(colors.bg_primary),
+        BorderRadius::all(Val::Px(4.0)),
+        FocusPolicy::Block,
+        TextInput,
+        TextInputTextFont(TextFont {
+            font,
+            font_size,
+            ..default()
+        }),
+        TextInputTextColor(TextColor(colors.text_primary)),
+        TextInputInactive(true),
+        TextInputValue(content.to_string()),
+        TextInputPlaceholder {
+            value: "Write to file...".to_string(),
+            ..default()
+        },
+    ));
+}
 
 pub fn popup(
     commands: &mut Commands,
@@ -33,15 +74,14 @@ pub fn popup(
     asset_server: &Res<AssetServer>,
     name: &str,
     content: &str,
-    file: &File,
 ) {
     let colors = Display::new();
 
     // ==== Define Buttons ==== //
 
-    let save = popup_button("Save", InteractiveState::Default, Icon::Save);
-    let cancel = popup_button("Cancel", InteractiveState::Default, Icon::Exit);
-    let delete = popup_button("Delete", InteractiveState::Default, Icon::Delete);
+    let save = default_button("Save", Icon::Save);
+    let cancel = default_button("Cancel", Icon::Exit);
+    let delete = default_button("Delete", Icon::Delete);
 
     // ==== Screen Container ==== //
 
@@ -82,9 +122,27 @@ pub fn popup(
             BackgroundColor(colors.bg_primary),
             BorderRadius::all(Val::Px(8.0)),
         )).with_children(|parent| {
+
             // ==== Header ==== //
 
-            small_header(parent, fonts, name);
+            parent.spawn(Node {
+                width: Val::Percent(100.0),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(12.0)),
+                ..default()
+            }).with_children(|parent| {
+                parent.spawn((
+                    Text::new(name),
+                    TextFont {
+                        font: fonts.style.heading.clone(),
+                        font_size: fonts.size.h4,
+                        ..default()
+                    },
+                    TextColor(colors.text_heading),
+                ));
+            });
 
             // ==== Text Input ==== //
 
@@ -141,125 +199,5 @@ pub fn popup(
 
             });
         });
-    });
-}
-
-pub fn popup_b_system(
-    mut commands: Commands,
-    mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
-    mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
-    s_query: Query<&SaveButton>,
-    c_query: Query<&CancelButton>,
-    delete_query: Query<&DeleteButton>, 
-    mut query: Query<&mut TextInputValue, With<TextEditor>>,
-    mut root: ResMut<Folder>, 
-    folder_state: ResMut<FolderState>,
-    folder_ui_section: Res<FolderUISection>, 
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
-) {
-    for (interaction, parent) in &mut interaction_query {
-        if let Interaction::Pressed = *interaction {
-            if s_query.get(parent.get()).is_ok() || c_query.get(parent.get()).is_ok() || delete_query.get(parent.get()).is_ok() {
-                if s_query.get(parent.get()).is_ok() {
-
-                    // ==== Saving File ===== //
-
-                    for mut text_input in &mut query {
-
-                        // ==== Get Text Input ===== //
-
-                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                            if let Some(file_name) = &folder_state.current_file_name {
-                                if let Some(file) = current_folder.get_file_mut(file_name) {
-
-                                    // ==== Set File Content To Text Input ===== //
-
-                                    file.content = text_input.0.clone();
-                                }
-                            }
-                        }
-                    }
-                } else if c_query.get(parent.get()).is_ok() {
-
-                    // ==== Cancel (Do nothing) ===== //
-                } else if delete_query.get(parent.get()).is_ok() {
-
-                    // ==== Deleting File or Folder ===== //
-
-                    if let Some(file_name) = &folder_state.current_file_name {
-                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                            current_folder.files.remove(file_name);
-                        }
-                    } else {
-                        let folder_name = folder_state.current_folder.clone();
-                        if let Some(current_folder) = root.find_folder_mut(&folder_name) {
-                            current_folder.subfolders.remove(&folder_name);
-                        }
-                    }
-                }
-
-                // ==== Close File Popup ===== //
-
-                for (entity, _, children) in popup_query.iter_mut() {
-                    for child in children.iter() {
-                        commands.entity(*child).despawn_recursive();
-                    }
-                    commands.entity(entity).despawn_recursive();
-                }
-
-                // ==== Update UI  ===== //
-
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
-                }
-            }
-        }
-    }
-}
-
-
-
-fn popup_button(label: &str, status: InteractiveState, icon: Icon) -> CustomButton {
-    CustomButton::new(
-        label,
-        Some(icon),
-        None,
-        ButtonStyle::Secondary,
-        ButtonWidth::Hug,
-        ButtonSize::Medium,
-        status,
-        JustifyContent::Center,
-        true,
-        false,
-    )
-}
-
-pub fn small_header (
-    parent: &mut ChildBuilder,
-    fonts: &Res<FontResources>,
-    title: &str, 
-) {
-    let colors = Display::new();
-
-    let node = Node {
-        width: Val::Percent(100.0),
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
-        flex_direction: FlexDirection::Row,
-        padding: UiRect::all(Val::Px(12.0)),
-        ..default()
-    };
-
-    parent.spawn(node).with_children(|parent| {
-        parent.spawn((
-            Text::new(title),
-            TextFont {
-                font: fonts.style.heading.clone(),
-                font_size: fonts.size.h4,
-                ..default()
-            },
-            TextColor(colors.text_heading),
-        ));
     });
 }
