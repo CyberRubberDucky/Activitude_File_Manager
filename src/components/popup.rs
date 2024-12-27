@@ -1,12 +1,7 @@
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 
-use crate::FontResources;
-
-use crate::theme::icons::Icon;
-use crate::theme::color::Display;
-
-use crate::components::button::ButtonComponent;
+use crate::Theme;
 use crate::components::button::default_button;
 
 use bevy_simple_text_input::{
@@ -31,13 +26,11 @@ pub struct TextEditor;
 
 pub fn text_editor(
     parent: &mut ChildBuilder,
-    fonts: &Res<FontResources>,
+    theme: &Res<Theme>,
     content: &str,
 ) {
-    let font = fonts.style.text.clone();
-    let font_size = fonts.size.md;
-
-    let colors = Display::new();
+    let font = theme.fonts.style.text.clone();
+    let font_size = theme.fonts.size.md;
 
     parent.spawn((
         Node {
@@ -51,8 +44,8 @@ pub fn text_editor(
             ..default()
         },
         TextEditor,
-        BorderColor(colors.outline_secondary),
-        BackgroundColor(colors.bg_primary),
+        BorderColor(theme.colors.outline_secondary),
+        BackgroundColor(theme.colors.bg_primary),
         BorderRadius::all(Val::Px(4.0)),
         FocusPolicy::Block,
         TextInput,
@@ -61,7 +54,7 @@ pub fn text_editor(
             font_size,
             ..default()
         }),
-        TextInputTextColor(TextColor(colors.text_primary)),
+        TextInputTextColor(TextColor(theme.colors.text_primary)),
         TextInputInactive(true),
         TextInputValue(content.to_string()),
         TextInputPlaceholder {
@@ -73,18 +66,11 @@ pub fn text_editor(
 
 pub fn popup(
     commands: &mut Commands,
-    fonts: &Res<FontResources>,
-    asset_server: &Res<AssetServer>,
+    theme: &Res<Theme>,
     name: &str,
     content: &str,
 ) {
-    let colors = Display::new();
 
-    // ==== Define Buttons ==== //
-
-    let save = default_button("Save", Icon::Save);
-    let cancel = default_button("Cancel", Icon::Exit);
-    let delete = default_button("Delete", Icon::Delete);
 
     // ==== Screen Container ==== //
 
@@ -121,8 +107,8 @@ pub fn popup(
                 },
                 ..default()
             },
-            BorderColor(colors.outline_secondary),
-            BackgroundColor(colors.bg_primary),
+            BorderColor(theme.colors.outline_secondary),
+            BackgroundColor(theme.colors.bg_primary),
             BorderRadius::all(Val::Px(8.0)),
         )).with_children(|parent| {
 
@@ -139,17 +125,17 @@ pub fn popup(
                 parent.spawn((
                     Text::new(name),
                     TextFont {
-                        font: fonts.style.heading.clone(),
-                        font_size: fonts.size.h4,
+                        font: theme.fonts.style.heading.clone(),
+                        font_size: theme.fonts.size.h4,
                         ..default()
                     },
-                    TextColor(colors.text_heading),
+                    TextColor(theme.colors.text_heading),
                 ));
             });
 
             // ==== Text Input ==== //
 
-            text_editor(parent, fonts, content);
+            text_editor(parent, theme, content);
 
             // ==== Buttons ==== //
 
@@ -165,16 +151,9 @@ pub fn popup(
             )).with_children(|parent| {
 
                 // ==== Delete Button ==== //
-
-                parent.spawn((
-                    Node::default(),
-                    DeleteButton,
-                )).with_children(|child| {
-                    ButtonComponent::spawn_button(child, asset_server, fonts, delete);
-                });
+                default_button("Delete", theme.icons.delete()).create_on(parent, DeleteButton, theme);
 
                 // ==== Spacer ==== //
-
                 parent.spawn((
                     Node {
                         width: Val::Percent(100.0),
@@ -183,22 +162,10 @@ pub fn popup(
                 ));
 
                 // ==== Cancel Button ==== //
-
-                parent.spawn((
-                    Node::default(),
-                    CancelButton,
-                )).with_children(|child| {
-                    ButtonComponent::spawn_button(child, asset_server, fonts, cancel);
-                });
+                default_button("Cancel", theme.icons.exit()).create_on(parent, CancelButton, theme);
 
                 // ==== Save Button ==== //
-
-                parent.spawn((
-                    Node::default(),
-                    SaveButton,
-                )).with_children(|child| {
-                    ButtonComponent::spawn_button(child, asset_server, fonts, save);
-                });
+                default_button("Save", theme.icons.save()).create_on(parent, SaveButton, theme);
 
             });
         });

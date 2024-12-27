@@ -2,13 +2,9 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy::input::mouse::MouseButton;
 
-use crate::theme::color::Display;
-use crate::theme::icons::Icon;
-
 use crate::EXPAND;
-use crate::FontResources;
+use crate::Theme;
 
-use crate::components::button::ButtonComponent;
 use crate::components::button::context_button;
 
 #[derive(Component)]
@@ -20,14 +16,12 @@ pub struct NewFolderButton;
 
 pub fn context_menu(
     mut commands: Commands,
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
     query_window: Query<&Window, With<PrimaryWindow>>,
     mouse_button: Res<ButtonInput<MouseButton>>,
     mut context_menu_query: Query<(Entity, &Children), With<ContextMenu>>,
+    theme: Res<Theme>,
 ) {
     let window = query_window.single();
-    let colors = Display::new();
 
     if let Some(cursor_position) = window.cursor_position() {
         if mouse_button.just_pressed(MouseButton::Right) {
@@ -41,9 +35,6 @@ pub fn context_menu(
 
                 // === Define menu buttons === //
 
-                let folder = context_button("Create Folder", Icon::Folder);
-                let file = context_button("Create File", Icon::File);
-
                 commands.spawn((
                     Node {
                         left: Val::Percent(width * 100.0),
@@ -55,8 +46,8 @@ pub fn context_menu(
                         flex_direction: FlexDirection::Column,
                         ..default()
                     },
-                    BorderColor(colors.outline_secondary),
-                    BackgroundColor(colors.bg_primary),
+                    BorderColor(theme.colors.outline_secondary),
+                    BackgroundColor(theme.colors.bg_primary),
                     BorderRadius::all(Val::Px(8.0)),
                     ContextMenu,
                 )).with_children(|child| {
@@ -74,9 +65,8 @@ pub fn context_menu(
                             },
                             ..default()
                         },
-                        NewFolderButton,
                     )).with_children(|parent| {
-                        ButtonComponent::spawn_button(parent, &asset_server, &fonts, folder);
+                        context_button("Create Folder", theme.icons.folder()).create_on(parent, NewFolderButton, &theme);
                     });
 
                     // ==== Separator ===== //
@@ -87,7 +77,7 @@ pub fn context_menu(
                             height: Val::Px(1.0),
                             ..default()
                         },
-                        BackgroundColor(colors.outline_secondary),
+                        BackgroundColor(theme.colors.outline_secondary),
                     ));
 
                     // ==== Create File Button ===== //
@@ -103,9 +93,8 @@ pub fn context_menu(
                             },
                             ..default()
                         },
-                        NewFileButton,
                     )).with_children(|parent| {
-                        ButtonComponent::spawn_button(parent, &asset_server, &fonts, file);
+                        context_button("Create File", theme.icons.file()).create_on(parent, NewFileButton, &theme);
                     });
                 });
             }

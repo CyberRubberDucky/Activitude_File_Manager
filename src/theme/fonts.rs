@@ -2,11 +2,19 @@
 use bevy::prelude::*;
 use bevy_ui::prelude::*;
 
-#[derive(Resource)]
 pub struct FontResources {
     pub style: Style,
     pub size: FontSizes,
 }
+
+impl FontResources {
+    pub fn new(asset_server: &Res<AssetServer>) -> Self {
+        FontResources{
+            style: Style::new(asset_server),
+            size: FontSizes::default()
+        }
+    }
+} 
 
 #[derive(Resource)]
 pub struct Style {
@@ -15,12 +23,14 @@ pub struct Style {
     pub label: Handle<Font>,
 }
 
-impl Default for Style {
-    fn default() -> Style {
+impl Style {
+    pub fn new(asset_server: &Res<AssetServer>) -> Style {
+        let outfit_bold = asset_server.load("fonts/Outfit-Bold.ttf");
+        let outfit_regular = asset_server.load("fonts/Outfit-Regular.ttf");
         Style {
-            heading: Handle::default(),
-            text: Handle::default(),
-            label: Handle::default(),
+            heading: outfit_bold.clone(),
+            text: outfit_regular.clone(),
+            label: outfit_bold.clone(),
         }
     }
 }
@@ -58,18 +68,4 @@ impl Default for FontSizes {
             xs: 12.0,
         }
     }
-}
-
-pub fn setup_fonts(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let outfit_bold = asset_server.load("fonts/Outfit-Bold.ttf");
-    let outfit_regular = asset_server.load("fonts/Outfit-Regular.ttf");
-
-    commands.insert_resource(FontResources {
-        style: Style {
-            heading: outfit_bold.clone(),
-            text: outfit_regular.clone(),
-            label: outfit_bold.clone(),
-        },
-        size: FontSizes::default(),
-    });
 }

@@ -1,11 +1,22 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use crate::theme::icons::Icon;
-use crate::theme::color::Display;
-use crate::theme::fonts::FontResources;
+use crate::components::popup::popup;
 
+use crate::file_manager::SearchBar;
 use crate::file_manager::display_files_and_folders;
+
+use bevy_simple_text_input::TextInput;
+use bevy_simple_text_input::TextInputValue;
+
+use crate::Theme;
+
+#[derive(Component)]
+pub struct FolderName(pub String);
+#[derive(Component)]
+pub struct FileName(pub String);
+#[derive(Resource)]
+pub struct FolderUISection(pub Entity);
 
 #[derive(Debug, Clone)]
 pub struct File {
@@ -35,26 +46,23 @@ pub fn update_folder_ui(
     commands: &mut Commands,
     folder_ui_section: Entity,
     folder: &Folder,
-    fonts: &Res<FontResources>,
-    asset_server: &Res<AssetServer>,
+    theme: &Res<Theme>,
 ) {
     commands.entity(folder_ui_section).despawn_descendants();
     commands.entity(folder_ui_section).with_children(|parent| {
-        display_files_and_folders(parent, folder, fonts, asset_server);
+        display_files_and_folders(parent, folder, theme);
     });
 }
 
 // ==== Folder or File Visual ===== //
 
-pub fn object (
+pub fn object(
     parent: &mut ChildBuilder, 
-    asset_server: &Res<AssetServer>,
-    fonts: &Res<FontResources>,
+    theme: &Res<Theme>,
     name: &str,
-    icon: Icon,
+    icon: ImageNode,
 ) {
 
-    let colors = Display::new();
     parent.spawn ((
         Node {
             justify_content: JustifyContent::Center,
@@ -68,7 +76,7 @@ pub fn object (
         // ==== Icon ===== //
 
         parent.spawn((
-            Icon::new(icon, asset_server),
+            icon,
             Node {
                 height: Val::Px(72.0),
                 width: Val::Px(72.0),
@@ -81,11 +89,11 @@ pub fn object (
         parent.spawn((
             Text::new(name),
             TextFont {
-                font: fonts.style.text.clone(),
-                font_size: fonts.size.md,
+                font: theme.fonts.style.text.clone(),
+                font_size: theme.fonts.size.md,
                 ..default()
             },
-            TextColor(colors.text_heading),
+            TextColor(theme.colors.text_heading),
         ));
     });
 }
@@ -168,5 +176,68 @@ impl Folder {
             }
         }
         self.name.clone()
+    }
+}
+
+
+
+// ==== Folder/File Interaction System ===== //
+
+pub fn file_manager_system(
+    root: Res<Folder>,
+    theme: Res<Theme>,
+    folder_ui_section: Res<FolderUISection>, 
+    mut commands: Commands,
+    mut folder_state: ResMut<FolderState>,
+    mut query: Query<(&TextInput, &mut TextInputValue), With<SearchBar>>, 
+    mut file_query: Query<(&Interaction, &FileName), (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<(&Interaction, &FolderName), (Changed<Interaction>, With<Button>)>,
+) {
+    for (interaction, folder_name) in interaction_query.iter_mut() {
+        if *interaction == Interaction::Pressed {
+            if folder_name.0 == ". ." {
+
+                // ==== Go Back ===== //
+
+                if let Some(current_folder) = root.find_folder(&folder_state.current_folder) {
+                    if let Some(parent_name) = &current_folder.parent_name {
+                        folder_state.current_folder = parent_name.clone();
+                        if let Some(parent_folder) = root.find_folder(parent_name) {
+                            update_folder_ui(&mut commands, folder_ui_section.0, parent_folder, &theme);
+                            let path = parent_folder.get_path(&root);
+                            for (_entity, mut text_input) in &mut query {
+                                text_input.0 = format!("/{}/", path.clone());
+                            }
+                        }
+                    }
+                }
+
+            } else {
+
+                // ==== Open Folder ===== //
+
+                folder_state.current_folder = folder_name.0.clone();
+                if let Some(folder) = root.find_folder(&folder_name.0) {
+                    update_folder_ui(&mut commands, folder_ui_section.0, folder, &theme);
+                    let path = folder.get_path(&root);
+                    for (_entity, mut text_input) in &mut query {
+                        text_input.0 = format!("/{}/", path.clone());
+                    }
+                }
+            }
+        }
+    }
+
+    // ==== Open File Popup ===== //
+
+    for (interaction, file_name) in file_query.iter_mut() {
+        if *interaction == Interaction::Pressed {
+            if let Some(folder) = root.find_folder(&folder_state.current_folder) {
+                if let Some(file) = folder.get_file(&file_name.0) {
+                    folder_state.current_file_name = Some(file.name.clone());
+                    popup(&mut commands, &theme, &file.name, &file.content);
+                }
+            }
+        }
     }
 }

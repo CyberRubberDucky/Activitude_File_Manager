@@ -1,10 +1,7 @@
 use bevy::prelude::*;
 
-use crate::theme::{
-    color::ButtonColor,
-    fonts::FontResources,
-    icons::Icon,
-};
+use crate::Theme;
+use crate::theme::color::ButtonColor;
 
 #[derive(Copy, Clone, Component, Debug)]
 pub enum ButtonStyle {
@@ -27,34 +24,32 @@ pub enum ButtonWidth {
     Hug,
 }
 
-pub struct CustomButton {
+pub struct CustomButton{
     label: String,
-    icon: Icon,
+    icon: ImageNode,
     style: ButtonStyle,
     width_style: ButtonWidth,
     alignment: JustifyContent,
 }
 
-pub struct ButtonComponent;
-
-impl ButtonComponent {
-    pub fn spawn_button(
+impl CustomButton {
+    pub fn create_on<T: Bundle>(
+        self,
         parent: &mut ChildBuilder,
-        asset_server: &Res<AssetServer>,
-        fonts: &Res<FontResources>,
-        data: CustomButton,
+        tag: T,
+        theme: &Res<Theme>
     ) {
         let status = InteractiveState::Default;
 
-        let colors: ButtonColor = ButtonColor::new(data.style, status);
-        let font = fonts.style.label.clone();
+        let colors: ButtonColor = ButtonColor::new(self.style, status);
+        let font = theme.fonts.style.label.clone();
 
-        let (button_width, flex_grow) = match data.width_style {
+        let (button_width, flex_grow) = match self.width_style {
             ButtonWidth::Expand => (Val::Percent(100.0), 1.0),
             ButtonWidth::Hug => (Val::Auto, 0.0),
         };
 
-        let (height, padding, icon_size, icon_pad, font_size) = (32.0, 12.0, 20.0, 4.0, fonts.size.md);
+        let (height, padding, icon_size, icon_pad, font_size) = (32.0, 12.0, 20.0, 4.0, theme.fonts.size.md);
 
         parent.spawn((
             Button,
@@ -64,7 +59,7 @@ impl ButtonComponent {
                 flex_basis: button_width,
                 width: button_width,
                 border: UiRect::all(Val::Px(1.0)),
-                justify_content: data.alignment,
+                justify_content: self.alignment,
                 align_items: AlignItems::Center,
                 flex_direction: FlexDirection::Row,
                 padding: UiRect {
@@ -77,14 +72,15 @@ impl ButtonComponent {
             BorderColor(colors.outline),
             BorderRadius::MAX,
             BackgroundColor(colors.background),
-            data.style,
+            self.style,
             status,
+            tag,
         )).with_children(|button| {
 
             // === Spawn Icon === //
 
             button.spawn((
-                Icon::new(data.icon, asset_server),
+                self.icon,
                 Node {
                     height: Val::Px(icon_size),
                     width: Val::Px(icon_size),
@@ -96,7 +92,7 @@ impl ButtonComponent {
             // === Spawn Label === //
 
             button.spawn((
-                Text::new(data.label),
+                Text::new(self.label),
                 TextFont {
                     font,
                     font_size,
@@ -109,7 +105,7 @@ impl ButtonComponent {
     }
 }
 
-pub fn default_button(label: &str, icon: Icon) -> CustomButton {
+pub fn default_button(label: &str, icon: ImageNode) -> CustomButton {
     CustomButton {
         label: label.to_string(),
         icon,
@@ -119,12 +115,51 @@ pub fn default_button(label: &str, icon: Icon) -> CustomButton {
     }
 }
 
-pub fn context_button(label: &str, icon: Icon) -> CustomButton {
+pub fn context_button(label: &str, icon: ImageNode) -> CustomButton {
     CustomButton {
         label: label.to_string(),
         icon,
         style: ButtonStyle::Ghost,
         width_style: ButtonWidth::Expand,
         alignment: JustifyContent::Start,
+    }
+}
+
+// ==== Handle Button Interactions ==== //
+
+pub fn button_system(
+    mut interaction_query: Query<
+        (
+            &Interaction,
+            &mut BackgroundColor,
+            &mut BorderColor,
+            Option<&ButtonStyle>,
+            &InteractiveState,
+        ),
+        (Changed<Interaction>, With<Button>),
+    >,
+) {
+    for (interaction, mut color, mut border_color, button_style, state) in &mut interaction_query {
+        if *state != InteractiveState::Disabled && *state != InteractiveState::Selected {
+            if let Some(button_style) = button_style {
+                match *interaction {
+                    Interaction::Hovered => {
+                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Hover);
+                        *color = colors.background.into();
+                        border_color.0 = colors.outline;
+                    }
+                    Interaction::None => {
+                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Default);
+                        *color = colors.background.into();
+                        border_color.0 = colors.outline;
+                    }
+                    Interaction::Pressed => {
+                        let colors: ButtonColor = ButtonColor::new(*button_style, InteractiveState::Selected);
+                        *color = colors.background.into();
+                        border_color.0 = colors.outline;
+                    }
+                }
+            }
+        }
     }
 }

@@ -1,41 +1,39 @@
 #![allow(unused)]
 use bevy::prelude::*;
 
-#[derive(Component, Copy, Clone)]
-pub enum Icon {
-    Exit,
-    Left,
-    Right,
-    Wallet,
-    Message,
-    Profile,
-    Paste,
-    Scan,
-    File,
-    Folder,
-    Forward,
-    Save,
-    Delete,
+pub struct IconResources {
+    pub exit: ImageNode,
+    pub left: ImageNode,
+    pub save: ImageNode,
+    pub file: ImageNode,
+    pub right: ImageNode,
+    pub delete: ImageNode,
+    pub folder: ImageNode,
 }
 
-impl Icon {
-    pub fn new(self, asset_server: &Res<AssetServer>) -> ImageNode {
-        let choice = match self {
-            Icon::Exit => "exit",
-            Icon::Left => "left",
-            Icon::Right => "right",
-            Icon::Wallet => "wallet",
-            Icon::Message => "message",
-            Icon::Profile => "profile",
-            Icon::Paste => "paste",
-            Icon::Scan => "qr-code",
-            Icon::File => "file",
-            Icon::Folder => "folder",
-            Icon::Forward => "forward",
-            Icon::Save => "save",
-            Icon::Delete => "delete",
-        };
-        let img = format!("icons/{}.png", choice);
-        ImageNode::new(asset_server.load(img.as_str()))
+impl IconResources {
+    pub fn resolve(assets: &Res<AssetServer>, name: &str) -> ImageNode {
+        ImageNode::new(assets.load(&format!("icons/{name}.png")))
     }
+
+    pub fn new(assets: &Res<AssetServer>) -> Self {
+        IconResources {
+            exit: Self::resolve(assets, "exit"),
+            left: Self::resolve(assets, "left"),
+            save: Self::resolve(assets, "save"),
+            file: Self::resolve(assets, "file"),
+            right: Self::resolve(assets, "right"),
+            delete: Self::resolve(assets, "delete"),
+            folder: Self::resolve(assets, "folder"),
+        }
+    }
+
+    pub fn exit(&self) -> ImageNode {self.exit.clone()}
+    pub fn left(&self) -> ImageNode {self.left.clone()}
+    pub fn save(&self) -> ImageNode {self.save.clone()}
+    pub fn file(&self) -> ImageNode {self.file.clone()}
+    pub fn right(&self) -> ImageNode {self.right.clone()}
+    pub fn delete(&self) -> ImageNode {self.delete.clone()}
+    pub fn folder(&self) -> ImageNode {self.folder.clone()}
+
 }

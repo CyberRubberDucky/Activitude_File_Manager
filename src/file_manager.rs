@@ -1,46 +1,41 @@
 use bevy::prelude::*;
 use bevy_ui::FocusPolicy;
 
+
 use crate::Folder;
 use crate::EXPAND;
 
+use crate::components::popup::TextEditor;
+
 use crate::file_display::object;
-
-use crate::theme::icons::Icon;
-use crate::theme::color::Display;
-use crate::theme::fonts::FontResources;
-
 use crate::file_display::FolderState;
+use crate::file_display::FolderUISection;
+use crate::file_display::FolderName;
+use crate::file_display::FileName;
+
+use crate::Theme;
 
 use bevy_simple_text_input::{
     TextInput,
     TextInputInactive,
     TextInputTextColor,
     TextInputTextFont,
+    TextInputSubmitEvent,
     TextInputValue
 };
 
 #[derive(Component)]
 pub struct SearchBar;
-#[derive(Component)]
-pub struct FolderName(pub String);
-#[derive(Component)]
-pub struct FileName(pub String);
 #[derive(Default, Resource)]
 pub struct RootNode(Option<Entity>);
-#[derive(Resource)]
-pub struct FolderUISection(pub Entity);
-
 
 /* -------------- Manager -------------- */
 
 pub fn manager(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    fonts: Res<FontResources>,
+    theme: Res<Theme>,
 ) {
 
-    let colors = Display::new();
     let root = Folder::new("root", None);
     let mut folder_ui_section: Option<FolderUISection> = None;
 
@@ -90,11 +85,11 @@ pub fn manager(
                     parent.spawn((
                         Text::new("Web5 File Manager"),
                         TextFont {
-                            font: fonts.style.heading.clone(),
-                            font_size: fonts.size.h3,
+                            font: theme.fonts.style.heading.clone(),
+                            font_size: theme.fonts.size.h3,
                             ..default()
                         },
-                        TextColor(colors.text_heading),
+                        TextColor(theme.colors.text_heading),
                     ));
                 });
 
@@ -115,13 +110,13 @@ pub fn manager(
                             ..default()
                         },
                         TextInputTextFont(TextFont {
-                            font:  fonts.style.text.clone(),
-                            font_size: fonts.size.md,
+                            font:  theme.fonts.style.text.clone(),
+                            font_size: theme.fonts.size.md,
                             ..default()
                         }),
-                        BorderColor(colors.outline_secondary),
-                        BackgroundColor(colors.bg_primary),
-                        TextInputTextColor(TextColor(colors.text_primary)),
+                        BorderColor(theme.colors.outline_secondary),
+                        BackgroundColor(theme.colors.bg_primary),
+                        TextInputTextColor(TextColor(theme.colors.text_primary)),
                         TextInputInactive(true),
                         TextInputValue("/root/".to_string()),
                         BorderRadius::all(Val::Px(8.0)),
@@ -138,7 +133,7 @@ pub fn manager(
                         width: Val::Percent(100.0),
                         ..default()
                     }).with_children(|parent| {
-                        display_files_and_folders(parent, &root, &fonts, &asset_server);
+                        display_files_and_folders(parent, &root, &theme);
                     }).id();
 
                     folder_ui_section = Some(FolderUISection(files_and_folders_node));
@@ -159,8 +154,7 @@ pub fn manager(
 pub fn display_files_and_folders(
     parent: &mut ChildBuilder,
     folder: &Folder,
-    fonts: &Res<FontResources>,
-    asset_server: &Res<AssetServer>,
+    theme: &Res<Theme>,
 ) {
 
     // ==== Design Nodes ===== //
@@ -203,7 +197,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, asset_server, fonts, ". .", Icon::Folder);
+                    object(parent, theme, ". .", theme.icons.folder());
                 });
             });
         }
@@ -217,7 +211,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, asset_server, fonts, name, Icon::File);
+                    object(parent, theme, name, theme.icons.file());
                 });
             });
         }
@@ -231,9 +225,43 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, asset_server, fonts, name, Icon::Folder);
+                    object(parent, theme, name, theme.icons.folder());
                 });
             });
         }
     });
+}
+
+
+pub fn text_input_system(
+    query: Query<(Entity, &Interaction), Changed<Interaction>>,
+    mut text_input_query: Query<(Entity, &mut TextInputInactive, &mut BorderColor)>,
+    mut events: EventReader<TextInputSubmitEvent>,
+    mut editor_query: Query<&mut TextInputValue, With<TextEditor>>,
+    theme: Res<Theme>,
+) {
+
+    // On Pressed
+    for (interaction_entity, interaction) in &query {
+        if *interaction == Interaction::Pressed {
+            for (entity, mut inactive, mut border_color) in &mut text_input_query {
+                if entity == interaction_entity {
+                    inactive.0 = false;
+                    *border_color = theme.colors.outline_primary.into();
+                } else {
+                    inactive.0 = true;
+                    *border_color = theme.colors.outline_secondary.into();
+                }
+            }
+        }
+    }
+
+    // On Enter
+    for event in events.read() {
+        for mut text_input in &mut editor_query {
+            text_input.0 = event.value.clone();
+            text_input.0.push('\n');
+        }
+    }
+    
 }

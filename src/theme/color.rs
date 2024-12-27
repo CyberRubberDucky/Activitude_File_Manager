@@ -9,7 +9,7 @@ use crate::components::button::{InteractiveState, ButtonStyle};
 
 /* -------- DISPLAY -------- */
 
-pub struct Display { 
+pub struct ColorResources { 
     pub bg_primary: Color, 
     pub bg_secondary: Color,
 
@@ -26,15 +26,9 @@ pub struct Display {
     pub status_danger: Color,
 }
 
-impl Default for Display {
+impl Default for ColorResources {
     fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Display {
-    pub fn new() -> Self {
-        Display {
+        ColorResources {
             bg_primary: Colors::tapa().shade1000,
             bg_secondary: Colors::tapa().shade950,
             
@@ -52,6 +46,7 @@ impl Display {
         }
     }
 }
+
 
 /* -------- ICONS -------- */
 
