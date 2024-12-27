@@ -3,14 +3,13 @@ use bevy::window::PrimaryWindow;
 use bevy::input::mouse::MouseButton;
 
 use crate::theme::color::Display;
-use crate::FontResources;
 use crate::theme::icons::Icon;
-use crate::EXPAND;
 
-use crate::components::button::{
-    ButtonComponent, 
-    context_button
-};
+use crate::EXPAND;
+use crate::FontResources;
+
+use crate::components::button::ButtonComponent;
+use crate::components::button::context_button;
 
 #[derive(Component)]
 pub struct ContextMenu;
@@ -41,6 +40,7 @@ pub fn context_menu(
                 );
 
                 // === Define menu buttons === //
+
                 let folder = context_button("Create Folder", Icon::Folder);
                 let file = context_button("Create File", Icon::File);
 

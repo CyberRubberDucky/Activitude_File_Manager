@@ -1,10 +1,13 @@
 use bevy::prelude::*;
+use bevy::ui::FocusPolicy;
+
+use crate::FontResources;
+
+use crate::theme::icons::Icon;
 use crate::theme::color::Display;
+
 use crate::components::button::ButtonComponent;
 use crate::components::button::default_button;
-use crate::FontResources;
-use crate::theme::icons::Icon;
-use bevy::ui::FocusPolicy;
 
 use bevy_simple_text_input::{
     TextInput,

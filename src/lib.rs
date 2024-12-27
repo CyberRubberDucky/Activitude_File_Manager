@@ -9,32 +9,32 @@ pub mod theme {
 
 pub mod components {
     pub mod context;
+    pub mod context_system;
     pub mod popup;
+    pub mod popup_system;
     pub mod button;
 }
 
 use bevy::prelude::*;
-use bevy_simple_text_input::{TextInputPlugin, TextInputSystem};
+use bevy_simple_text_input::TextInputSystem;
+use bevy_simple_text_input::TextInputPlugin;
 
-use theme::{
-    color::Colors,
-    fonts::setup_fonts,
-};
+use filemanager::RootNode;
+use filemanager::Folder;
+use filemanager::FolderState;
+use filemanager::manager;
 
-use crate::filemanager::RootNode;
-use crate::filemanager::Folder;
-use crate::filemanager::FolderState;
-use crate::filemanager::manager;
-use crate::components::context::context_menu;
-use crate::theme::fonts::FontResources;
-use crate::systems::{
-    create_system,
-    listener,
-    button_system,
-    popup_system,
-    button_interaction_system,
-    focus,
-};
+use theme::color::Colors;
+use theme::fonts::setup_fonts;
+use theme::fonts::FontResources;
+
+use components::popup_system::popup_system;
+use components::context_system::context_system;
+use components::context::context_menu;
+
+use systems::button_system;
+use systems::text_input_system;
+use systems::file_manager_system;
 
 pub const EXPAND: Val = Val::Percent(100.0);
 
@@ -47,7 +47,6 @@ pub fn main() {
             }),
             ..default()
         }))
-        .init_state::<PageState>()
         .insert_resource(ClearColor(Colors::tapa().shade1000))
         .insert_resource(RootNode::default())
         .insert_resource(Folder::default())
@@ -55,52 +54,18 @@ pub fn main() {
         .add_plugins(TextInputPlugin)
         .add_systems(PreStartup, startup_setup)
         .add_systems(PreStartup, setup_fonts)
-        .add_systems(OnEnter(PageState::FileManager), manager)
+        .add_systems(Startup, manager)
         .add_systems(Update, button_system)
-        .add_systems(Update, context_menu)
+        .add_systems(Update, text_input_system)
+        .add_systems(Update, file_manager_system)
+        .add_systems(Update, button_system)
         .add_systems(Update, popup_system)
-        .add_systems(Update, create_system)
-        .add_systems(Update, button_interaction_system)
-        .add_systems(Update, (menu_action, button_system))
-        .add_systems(Update, focus.before(TextInputSystem))
-        .add_systems(Update, listener.after(TextInputSystem))
+        .add_systems(Update, context_system)
+        .add_systems(Update, context_menu)
+        .add_systems(Update, text_input_system.after(TextInputSystem))
         .run();
 }
 
-#[derive(Component)]
-pub enum NavigateTo {
-    FileManager,
-    None,
-}
-
-#[derive(Clone, Copy, Default, Eq, PartialEq, Debug, Hash, States)]
-pub enum PageState {
-    FileManager,
-    #[default]
-    Disabled,
-}
-
-fn startup_setup(
-    mut menu_state: ResMut<NextState<PageState>>,
-    mut commands: Commands,
-) {
+fn startup_setup(mut commands: Commands) {
     commands.spawn(Camera2d);
-    menu_state.set(PageState::FileManager);
-}
-
-fn menu_action(
-    interaction_query: Query<
-        (&Interaction, &NavigateTo),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mut menu_state: ResMut<NextState<PageState>>,
-) {
-    for (interaction, menu_button_action) in &interaction_query {
-        if *interaction == Interaction::Pressed {
-            match menu_button_action {
-                NavigateTo::FileManager => menu_state.set(PageState::FileManager),
-                _ => {}
-            }
-        }
-    }
 }

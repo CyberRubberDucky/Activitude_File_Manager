@@ -2,9 +2,10 @@ use bevy::prelude::*;
 use bevy_ui::FocusPolicy;
 use std::collections::HashMap;
 
-use crate::theme::icons::Icon;
 use crate::EXPAND;
-use crate::theme::{color::Display, fonts::FontResources};
+use crate::theme::icons::Icon;
+use crate::theme::color::Display;
+use crate::theme::fonts::FontResources;
 
 use bevy_simple_text_input::{
     TextInput,

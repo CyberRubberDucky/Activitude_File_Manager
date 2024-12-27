@@ -1,28 +1,29 @@
 use bevy::prelude::*;
-use crate::components::button::ButtonStyle;
-use crate::components::button::InteractiveState;
-use crate::theme::color::{ButtonColor, Display};
-use crate::FontResources;
-use crate::components::context::NewFileButton;
+
 use bevy_simple_text_input::TextInputSubmitEvent;
-use crate::components::context::NewFolderButton;
-use crate::filemanager::SearchBar;
-use crate::filemanager::update_folder_ui;
-use crate::components::popup::popup;
-use crate::filemanager::FileName;
-use crate::filemanager::FolderName;
-use crate::filemanager::File;
-use crate::components::popup::Popup;
-use crate::components::popup::SaveButton;
-use crate::components::popup::CancelButton;
-use crate::components::popup::DeleteButton;
-use crate::components::popup::TextEditor;
 use bevy_simple_text_input::TextInputValue;
 use bevy_simple_text_input::TextInputInactive;
 use bevy_simple_text_input::TextInput;
+
+use crate::FontResources;
 use crate::FolderState;
 use crate::Folder;
+
 use crate::filemanager::FolderUISection;
+use crate::filemanager::SearchBar;
+use crate::filemanager::update_folder_ui;
+use crate::filemanager::FileName;
+use crate::filemanager::FolderName;
+
+use crate::components::popup::popup;
+use crate::components::popup::TextEditor;
+use crate::components::button::ButtonStyle;
+use crate::components::button::InteractiveState;
+
+use crate::theme::color::Display;
+use crate::theme::color::ButtonColor;
+
+// ==== Button Interaction System ===== //
 
 pub fn button_system(
     mut interaction_query: Query<
@@ -61,149 +62,17 @@ pub fn button_system(
     }
 }
 
-pub fn create_system(
-    mut commands: Commands,
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
-    mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
-    file_query: Query<&NewFileButton>,
-    folder_query: Query<&NewFolderButton>,
-    mut root: ResMut<Folder>,
-    folder_state: ResMut<FolderState>,
-    folder_ui_section: Res<FolderUISection>,
-) {
-    for (interaction, parent) in &mut interaction_query {
-        if let Interaction::Pressed = *interaction {
+// ==== Text Input System ===== //
 
-            // ==== On File Creation ===== //
-
-            if file_query.get(parent.get()).is_ok() {
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-
-                    // ==== Generate Name ===== //
-
-                    let new_file_name = format!("file{}.txt", current_folder.files.len() + 1);
-
-                    // ==== Add file to Current Folder ===== //
-
-                    current_folder.add_file(File {
-                        name: new_file_name.clone(),
-                        content: String::new(),
-                    });
-
-                    // ==== Update UI ===== //
-
-                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
-                }
-            }
-
-            // ==== On Folder Creation ===== //
-
-            if folder_query.get(parent.get()).is_ok() {
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                    let new_folder_name = format!("folder {}", current_folder.subfolders.len() + 1);
-
-                    current_folder.add_subfolder(Folder::new(&new_folder_name, Some(folder_state.current_folder.clone())));
-
-                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
-                }
-            }
-        }
-    }
-}
-
-
-pub fn popup_system(
-    mut commands: Commands,
-    mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
-    mut interaction_query: Query<(&Interaction, &Parent), (Changed<Interaction>, With<Button>)>,
-    s_query: Query<&SaveButton>,
-    c_query: Query<&CancelButton>,
-    delete_query: Query<&DeleteButton>, 
-    mut query: Query<&mut TextInputValue, With<TextEditor>>,
-    mut root: ResMut<Folder>, 
-    folder_state: ResMut<FolderState>,
-    folder_ui_section: Res<FolderUISection>, 
-    fonts: Res<FontResources>,
-    asset_server: Res<AssetServer>,
-) {
-    for (interaction, parent) in &mut interaction_query {
-        if let Interaction::Pressed = *interaction {
-            if s_query.get(parent.get()).is_ok() || c_query.get(parent.get()).is_ok() || delete_query.get(parent.get()).is_ok() {
-                if s_query.get(parent.get()).is_ok() {
-
-                    // ==== If Saving File ===== //
-
-                    for text_input in &mut query {
-
-                        // ==== Get Text Input ===== //
-
-                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                            if let Some(file_name) = &folder_state.current_file_name {
-                                if let Some(file) = current_folder.get_file_mut(file_name) {
-
-                                    // ==== Set File Content To Text Input ===== //
-
-                                    file.content = text_input.0.clone();
-                                }
-                            }
-                        }
-                    }
-                } else if c_query.get(parent.get()).is_ok() {
-
-                    // ==== Cancel (Do nothing) ===== //
-                } else if delete_query.get(parent.get()).is_ok() {
-
-                    // ==== Deleting File or Folder ===== //
-
-                    if let Some(file_name) = &folder_state.current_file_name {
-                        if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                            current_folder.files.remove(file_name);
-                        }
-                    } else {
-                        let folder_name = folder_state.current_folder.clone();
-                        if let Some(current_folder) = root.find_folder_mut(&folder_name) {
-                            current_folder.subfolders.remove(&folder_name);
-                        }
-                    }
-                }
-
-                // ==== Close File Popup ===== //
-
-                for (entity, _, children) in popup_query.iter_mut() {
-                    for child in children.iter() {
-                        commands.entity(*child).despawn_recursive();
-                    }
-                    commands.entity(entity).despawn_recursive();
-                }
-
-                // ==== Update UI  ===== //
-
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                    update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &fonts, &asset_server);
-                }
-            }
-        }
-    }
-}
-
-pub fn listener(
-    mut events: EventReader<TextInputSubmitEvent>,
-    mut query: Query<&mut TextInputValue, With<TextEditor>>, 
-) {
-    for event in events.read() {
-        for mut text_input in &mut query {
-            text_input.0 = event.value.clone();
-            text_input.0.push('\n');
-        }
-    }
-}
-
-pub fn focus(
+pub fn text_input_system(
     query: Query<(Entity, &Interaction), Changed<Interaction>>,
     mut text_input_query: Query<(Entity, &mut TextInputInactive, &mut BorderColor)>,
+    mut events: EventReader<TextInputSubmitEvent>,
+    mut editor_query: Query<&mut TextInputValue, With<TextEditor>>,
 ) {
     let colors = Display::new();
+
+    // On Pressed
     for (interaction_entity, interaction) in &query {
         if *interaction == Interaction::Pressed {
             for (entity, mut inactive, mut border_color) in &mut text_input_query {
@@ -217,14 +86,20 @@ pub fn focus(
             }
         }
     }
+
+    // On Enter
+    for event in events.read() {
+        for mut text_input in &mut editor_query {
+            text_input.0 = event.value.clone();
+            text_input.0.push('\n');
+        }
+    }
+    
 }
 
+// ==== Folder/File Interaction System ===== //
 
-// ==== Interaction System ===== //
-
-pub fn button_interaction_system(
-    mut interaction_query: Query<(&Interaction, &FolderName), (Changed<Interaction>, With<Button>)>,
-    mut file_query: Query<(&Interaction, &FileName), (Changed<Interaction>, With<Button>)>,
+pub fn file_manager_system(
     mut folder_state: ResMut<FolderState>,
     mut commands: Commands,
     root: Res<Folder>,
@@ -232,12 +107,14 @@ pub fn button_interaction_system(
     asset_server: Res<AssetServer>,
     folder_ui_section: Res<FolderUISection>, 
     mut query: Query<(&TextInput, &mut TextInputValue), With<SearchBar>>, 
+    mut file_query: Query<(&Interaction, &FileName), (Changed<Interaction>, With<Button>)>,
+    mut interaction_query: Query<(&Interaction, &FolderName), (Changed<Interaction>, With<Button>)>,
 ) {
     for (interaction, folder_name) in interaction_query.iter_mut() {
         if *interaction == Interaction::Pressed {
             if folder_name.0 == ". ." {
 
-                // ==== Go Back A Level ===== //
+                // ==== Go Back ===== //
 
                 if let Some(current_folder) = root.find_folder(&folder_state.current_folder) {
                     if let Some(parent_name) = &current_folder.parent_name {
