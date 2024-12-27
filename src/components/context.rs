@@ -1,16 +1,16 @@
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use bevy::input::mouse::MouseButton;
-use crate::theme::color::Display;
 
+use crate::theme::color::Display;
+use crate::FontResources;
+use crate::theme::icons::Icon;
 use crate::EXPAND;
+
 use crate::components::button::{
     ButtonComponent, 
     context_button
 };
-
-use crate::FontResources;
-use crate::theme::icons::Icon;
-use bevy::window::PrimaryWindow;
 
 #[derive(Component)]
 pub struct ContextMenu;

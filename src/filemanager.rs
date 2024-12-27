@@ -46,7 +46,7 @@ impl FolderState {
     }
 }
 
-// ==== Label ===== //
+/* -------------- Manager -------------- */
 
 pub fn manager(
     mut commands: Commands,
@@ -169,6 +169,8 @@ pub fn manager(
     commands.insert_resource(FolderState::new());
 }
 
+/* -------------- Display Files And Folders -------------- */
+
 pub fn display_files_and_folders(
     parent: &mut ChildBuilder,
     folder: &Folder,
@@ -195,8 +197,8 @@ pub fn display_files_and_folders(
         margin: UiRect::all(Val::Px(5.0)),
         ..default()
     };
-
-    let parent_node = Node {
+    
+    parent.spawn(Node {
         flex_direction: FlexDirection::Row,
         justify_content: JustifyContent::Start,
         align_items: AlignItems::Center,
@@ -205,10 +207,7 @@ pub fn display_files_and_folders(
         width: Val::Percent(100.0),
         margin: UiRect::all(Val::Px(5.0)),
         ..default()
-    };
-    
-    parent.spawn(parent_node.clone())
-    .with_children(|parent| {
+    }).with_children(|parent| {
 
         // ==== Display Back Folder ===== //
 
@@ -253,8 +252,6 @@ pub fn display_files_and_folders(
         }
     });
 }
-
-// ==== Update Folders/Files Displayed ===== //
 
 pub fn update_folder_ui(
     commands: &mut Commands,
