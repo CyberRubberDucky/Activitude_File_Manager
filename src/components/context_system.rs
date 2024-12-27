@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 
-use crate::Folder;
-use crate::FolderState;
-use crate::FontResources;
+use crate::theme::fonts::FontResources;
 
-use crate::filemanager::File;
-use crate::filemanager::update_folder_ui;
-use crate::filemanager::FolderUISection;
+use crate::file_display::Folder;
+use crate::file_display::FolderState;
+use crate::file_display::File;
+use crate::file_display::update_folder_ui;
+
+use crate::file_manager::FolderUISection;
 
 use crate::components::context::NewFileButton;
 use crate::components::context::NewFolderButton;

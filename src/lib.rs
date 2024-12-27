@@ -1,4 +1,5 @@
-mod filemanager;
+mod file_manager;
+mod file_display;
 mod systems;
 
 pub mod theme {
@@ -19,10 +20,11 @@ use bevy::prelude::*;
 use bevy_simple_text_input::TextInputSystem;
 use bevy_simple_text_input::TextInputPlugin;
 
-use filemanager::RootNode;
-use filemanager::Folder;
-use filemanager::FolderState;
-use filemanager::manager;
+use file_display::Folder;
+use file_display::FolderState;
+
+use file_manager::RootNode;
+use file_manager::manager;
 
 use theme::color::Colors;
 use theme::fonts::setup_fonts;

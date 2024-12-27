@@ -5,21 +5,21 @@ use bevy_simple_text_input::TextInputValue;
 use bevy_simple_text_input::TextInputInactive;
 use bevy_simple_text_input::TextInput;
 
-use crate::FontResources;
-use crate::FolderState;
-use crate::Folder;
+use crate::file_display::update_folder_ui;
+use crate::file_display::FolderState;
+use crate::file_display::Folder;
 
-use crate::filemanager::FolderUISection;
-use crate::filemanager::SearchBar;
-use crate::filemanager::update_folder_ui;
-use crate::filemanager::FileName;
-use crate::filemanager::FolderName;
+use crate::file_manager::FolderUISection;
+use crate::file_manager::SearchBar;
+use crate::file_manager::FileName;
+use crate::file_manager::FolderName;
 
 use crate::components::popup::popup;
 use crate::components::popup::TextEditor;
 use crate::components::button::ButtonStyle;
 use crate::components::button::InteractiveState;
 
+use crate::theme::fonts::FontResources;
 use crate::theme::color::Display;
 use crate::theme::color::ButtonColor;
 

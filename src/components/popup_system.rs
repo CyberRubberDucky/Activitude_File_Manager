@@ -2,17 +2,18 @@
 use bevy::prelude::*;
 use bevy_simple_text_input::TextInputValue;
 
-use crate::Folder;
-use crate::FolderState;
-use crate::FontResources;
+use crate::theme::fonts::FontResources;
+
+use crate::file_display::Folder;
+use crate::file_display::FolderState;
+use crate::file_display::update_folder_ui;
 
 use crate::components::popup::Popup;
 use crate::components::popup::SaveButton;
 use crate::components::popup::DeleteButton;
 use crate::components::popup::TextEditor;
 
-use crate::filemanager::FolderUISection;
-use crate::filemanager::update_folder_ui;
+use crate::file_manager::FolderUISection;
 
 pub fn popup_system(
     save_query: Query<&SaveButton>,
