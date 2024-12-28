@@ -57,12 +57,7 @@ pub fn context_menu(
                     child.spawn((
                         Node {
                             width: EXPAND,
-                            padding: UiRect{
-                                left: (Val::Px(4.0)),
-                                right: (Val::Px(4.0)),
-                                top: (Val::Px(4.0)),
-                                bottom: (Val::Px(4.0)),
-                            },
+                            padding: UiRect::all(Val::Px(4.0)),
                             ..default()
                         },
                     )).with_children(|parent| {
@@ -85,12 +80,7 @@ pub fn context_menu(
                     child.spawn((
                         Node {
                             width: EXPAND,
-                            padding: UiRect{
-                                left: (Val::Px(4.0)),
-                                right: (Val::Px(4.0)),
-                                top: (Val::Px(4.0)),
-                                bottom: (Val::Px(4.0)),
-                            },
+                            padding: UiRect::all(Val::Px(4.0)),
                             ..default()
                         },
                     )).with_children(|parent| {

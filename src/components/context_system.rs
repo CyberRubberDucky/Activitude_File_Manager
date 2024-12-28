@@ -23,7 +23,6 @@ pub fn context_system(
     for interaction in &mut file_query {
         if let Interaction::Pressed = *interaction {
 
-
             // ==== On File Creation ===== //
             if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
 
@@ -42,7 +41,6 @@ pub fn context_system(
 
                 update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
             }
-            
         }
     }
 
@@ -59,7 +57,6 @@ pub fn context_system(
 
                 update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
             }
-            
         }
     }
 }

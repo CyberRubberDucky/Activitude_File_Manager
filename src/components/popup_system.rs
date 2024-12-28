@@ -24,7 +24,6 @@ pub fn popup_system(
     folder_ui_section: Res<FolderUISection>, 
     mut text_input_query: Query<&mut TextInputValue, With<TextEditor>>,
     mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
-    mut any_query: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
     mut save_query: Query<&Interaction, (Changed<Interaction>, With<SaveButton>)>,
     mut cancel_query: Query<&Interaction, (Changed<Interaction>, With<CancelButton>)>,
     mut delete_query: Query<&Interaction, (Changed<Interaction>, With<DeleteButton>)>,
@@ -32,20 +31,9 @@ pub fn popup_system(
     for interaction in &mut cancel_query {
         if let Interaction::Pressed = *interaction {
 
-            // ==== Close File Popup ===== //
+            // ==== Cancel ==== //
 
-            for (entity, _, children) in popup_query.iter_mut() {
-                for child in children.iter() {
-                    commands.entity(*child).despawn_recursive();
-                }
-                commands.entity(entity).despawn_recursive();
-            }
-
-            // ==== Update UI  ===== //
-
-            if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
-            }
+            close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
         }
     }
 
@@ -59,24 +47,10 @@ pub fn popup_system(
                     if let Some(file_name) = &folder_state.current_file_name {
                         if let Some(file) = current_folder.get_file_mut(file_name) {
                             file.content = text_input.0.clone();
+                            close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
                         }
                     }
                 }
-            }
-
-            // ==== Close File Popup ===== //
-
-            for (entity, _, children) in popup_query.iter_mut() {
-                for child in children.iter() {
-                    commands.entity(*child).despawn_recursive();
-                }
-                commands.entity(entity).despawn_recursive();
-            }
-
-            // ==== Update UI  ===== //
-
-            if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
             }
         }
     }
@@ -90,24 +64,35 @@ pub fn popup_system(
             if let Some(file_name) = &folder_state.current_file_name {
                 if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
                     current_folder.files.remove(file_name);
+                    close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
                 }
-            }
-
-            // ==== Close File Popup ===== //
-
-            for (entity, _, children) in popup_query.iter_mut() {
-                for child in children.iter() {
-                    commands.entity(*child).despawn_recursive();
-                }
-                commands.entity(entity).despawn_recursive();
-            }
-
-            // ==== Update UI  ===== //
-
-            if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
             }
         }
     }
+}
 
+
+
+pub fn close_popup(
+    commands: &mut Commands,
+    root: &mut ResMut<Folder>,
+    folder_state: &ResMut<FolderState>,
+    theme: &Res<Theme>,
+    folder_ui_section: &Res<FolderUISection>, 
+    popup_query: &mut Query<(Entity, &Node, &Children), With<Popup>>,
+) {
+    // ==== Close File Popup ===== //
+
+    for (entity, _, children) in popup_query.iter_mut() {
+        for child in children.iter() {
+            commands.entity(*child).despawn_recursive();
+        }
+        commands.entity(entity).despawn_recursive();
+    }
+
+    // ==== Update UI  ===== //
+
+    if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+        update_folder_ui(commands, folder_ui_section.0, current_folder, &theme);
+    }
 }
