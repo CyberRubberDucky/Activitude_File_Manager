@@ -8,8 +8,8 @@ use crate::file_display::File;
 use crate::file_display::update_folder_ui;
 use crate::file_display::FolderUISection;
 
-use crate::components::context::NewFileButton;
-use crate::components::context::NewFolderButton;
+use crate::context::NewFileButton;
+use crate::context::NewFolderButton;
 
 pub fn context_system(
     mut commands: Commands,

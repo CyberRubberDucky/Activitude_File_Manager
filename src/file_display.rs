@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::collections::HashMap;
 
-use crate::components::popup::popup;
+use crate::popup::popup;
 
 use crate::file_manager::SearchBar;
 use crate::file_manager::display_files_and_folders;
@@ -93,7 +93,7 @@ pub fn object(
                 font_size: theme.fonts.size.md,
                 ..default()
             },
-            TextColor(theme.colors.text_heading),
+            TextColor(theme.colors.text.heading),
         ));
     });
 }

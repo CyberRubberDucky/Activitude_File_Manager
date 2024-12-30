@@ -5,7 +5,7 @@ use bevy::input::mouse::MouseButton;
 use crate::EXPAND;
 use crate::Theme;
 
-use crate::components::button::context_button;
+use crate::ramp_ds::components::button::context_button;
 
 #[derive(Component)]
 pub struct ContextMenu;
@@ -46,8 +46,8 @@ pub fn context_menu(
                         flex_direction: FlexDirection::Column,
                         ..default()
                     },
-                    BorderColor(theme.colors.outline_secondary),
-                    BackgroundColor(theme.colors.bg_primary),
+                    BorderColor(theme.colors.outline.secondary),
+                    BackgroundColor(theme.colors.background.primary),
                     BorderRadius::all(Val::Px(8.0)),
                     ContextMenu,
                 )).with_children(|child| {
@@ -61,7 +61,7 @@ pub fn context_menu(
                             ..default()
                         },
                     )).with_children(|parent| {
-                        context_button("Create Folder", theme.icons.folder()).create_on(parent, NewFolderButton, &theme);
+                        context_button("Create Folder", theme.icons.get("folder").unwrap()).spawn_under(parent, NewFolderButton, &theme);
                     });
 
                     // ==== Separator ===== //
@@ -72,7 +72,7 @@ pub fn context_menu(
                             height: Val::Px(1.0),
                             ..default()
                         },
-                        BackgroundColor(theme.colors.outline_secondary),
+                        BackgroundColor(theme.colors.outline.secondary),
                     ));
 
                     // ==== Create File Button ===== //
@@ -84,7 +84,7 @@ pub fn context_menu(
                             ..default()
                         },
                     )).with_children(|parent| {
-                        context_button("Create File", theme.icons.file()).create_on(parent, NewFileButton, &theme);
+                        context_button("Create File", theme.icons.get("file").unwrap()).spawn_under(parent, NewFileButton, &theme);
                     });
                 });
             }

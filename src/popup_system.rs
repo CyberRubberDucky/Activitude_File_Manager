@@ -8,11 +8,11 @@ use crate::file_display::FolderState;
 use crate::file_display::FolderUISection;
 use crate::file_display::update_folder_ui;
 
-use crate::components::popup::Popup;
-use crate::components::popup::SaveButton;
-use crate::components::popup::CancelButton;
-use crate::components::popup::DeleteButton;
-use crate::components::popup::TextEditor;
+use crate::popup::Popup;
+use crate::popup::SaveButton;
+use crate::popup::CancelButton;
+use crate::popup::DeleteButton;
+use crate::popup::TextEditor;
 
 use crate::Theme;
 

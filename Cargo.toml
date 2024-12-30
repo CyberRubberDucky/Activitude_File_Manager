@@ -12,6 +12,7 @@ rand = "0.8.5"
 bevy = "0.15.0"
 bevy_simple_text_input = "0.10.0"
 bevy_cosmic_edit = "0.26.0"
+ramp_ds = {path="../ramp_ds"}
 
 [lib]
 crate-type = [

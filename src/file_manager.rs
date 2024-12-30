@@ -5,7 +5,7 @@ use bevy_ui::FocusPolicy;
 use crate::Folder;
 use crate::EXPAND;
 
-use crate::components::popup::TextEditor;
+use crate::popup::TextEditor;
 
 use crate::file_display::object;
 use crate::file_display::FolderState;
@@ -89,7 +89,7 @@ pub fn manager(
                             font_size: theme.fonts.size.h3,
                             ..default()
                         },
-                        TextColor(theme.colors.text_heading),
+                        TextColor(theme.colors.text.heading),
                     ));
                 });
 
@@ -114,9 +114,9 @@ pub fn manager(
                             font_size: theme.fonts.size.md,
                             ..default()
                         }),
-                        BorderColor(theme.colors.outline_secondary),
-                        BackgroundColor(theme.colors.bg_primary),
-                        TextInputTextColor(TextColor(theme.colors.text_primary)),
+                        BorderColor(theme.colors.outline.secondary),
+                        BackgroundColor(theme.colors.background.primary),
+                        TextInputTextColor(TextColor(theme.colors.text.primary)),
                         TextInputInactive(true),
                         TextInputValue("/root/".to_string()),
                         BorderRadius::all(Val::Px(8.0)),
@@ -197,7 +197,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, ". .", theme.icons.folder());
+                    object(parent, theme, ". .", theme.icons.get("folder").unwrap());
                 });
             });
         }
@@ -211,7 +211,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, name, theme.icons.file());
+                    object(parent, theme, name, theme.icons.get("file").unwrap());
                 });
             });
         }
@@ -225,7 +225,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, name, theme.icons.folder());
+                    object(parent, theme, name, theme.icons.get("folder").unwrap());
                 });
             });
         }
@@ -247,10 +247,10 @@ pub fn text_input_system(
             for (entity, mut inactive, mut border_color) in &mut text_input_query {
                 if entity == interaction_entity {
                     inactive.0 = false;
-                    *border_color = theme.colors.outline_primary.into();
+                    *border_color = theme.colors.outline.primary.into();
                 } else {
                     inactive.0 = true;
-                    *border_color = theme.colors.outline_secondary.into();
+                    *border_color = theme.colors.outline.secondary.into();
                 }
             }
         }
