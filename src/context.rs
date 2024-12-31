@@ -61,7 +61,7 @@ pub fn context_menu(
                             ..default()
                         },
                     )).with_children(|parent| {
-                        context_button("Create Folder", theme.icons.get("folder").unwrap()).spawn_under(parent, NewFolderButton, &theme);
+                        context_button("Create Folder", theme.icons.get("folder")).spawn_under(parent, NewFolderButton, &theme);
                     });
 
                     // ==== Separator ===== //
@@ -84,7 +84,7 @@ pub fn context_menu(
                             ..default()
                         },
                     )).with_children(|parent| {
-                        context_button("Create File", theme.icons.get("file").unwrap()).spawn_under(parent, NewFileButton, &theme);
+                        context_button("Create File", theme.icons.get("file")).spawn_under(parent, NewFileButton, &theme);
                     });
                 });
             }

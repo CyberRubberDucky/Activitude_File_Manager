@@ -38,39 +38,27 @@ pub fn manager(
 
     let root = Folder::new("root", None);
     let mut folder_ui_section: Option<FolderUISection> = None;
-
-    let interface = Node {
-        width: EXPAND,
-        height: EXPAND,
-        align_items: AlignItems::Start,
-        justify_content: JustifyContent::Start,
-        flex_direction: FlexDirection::Row,
-        ..default()
-    };
-
-    let page_node = Node {
-        width: EXPAND,
-        height: EXPAND,
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
-        flex_direction: FlexDirection::Column,
-        ..default()
-    };
-
-    let content = Node {
-        width: EXPAND,
-        height: EXPAND,
-        max_width: Val::Px(512.0),
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Start,
-        flex_direction: FlexDirection::Column,
-        row_gap: Val::Px(24.0),
-        ..default()
-    };
     
-    let root_node = commands.spawn(interface)
-        .with_children(|parent| {
-            parent.spawn((page_node, Interaction::None)).with_children(|parent| {
+    let root_node = commands
+        .spawn((
+            Node {
+                width: EXPAND,
+                height: EXPAND,
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::Start,
+                flex_direction: FlexDirection::Row,
+                ..default()
+            },
+            BackgroundColor(theme.colors.background.primary)
+        )).with_children(|parent| {
+            parent.spawn((Node {
+                width: EXPAND,
+                height: EXPAND,
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                flex_direction: FlexDirection::Column,
+                ..default()
+            }, Interaction::None)).with_children(|parent| {
 
                 // === Header === //
 
@@ -95,7 +83,16 @@ pub fn manager(
 
                 // === Body === //
                 
-                parent.spawn(content).with_children(|parent| {
+                parent.spawn(Node {
+                    width: EXPAND,
+                    height: EXPAND,
+                    max_width: Val::Px(512.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Start,
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(24.0),
+                    ..default()
+                }).with_children(|parent| {
 
                     // === Text Input to Show current directory === //
                     
@@ -197,7 +194,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, ". .", theme.icons.get("folder").unwrap());
+                    object(parent, theme, ". .", theme.icons.get("folder"));
                 });
             });
         }
@@ -211,7 +208,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, name, theme.icons.get("file").unwrap());
+                    object(parent, theme, name, theme.icons.get("file"));
                 });
             });
         }
@@ -225,7 +222,7 @@ pub fn display_files_and_folders(
             .with_children(|parent| {
                 parent.spawn(column_node.clone())
                 .with_children(|parent| {
-                    object(parent, theme, name, theme.icons.get("folder").unwrap());
+                    object(parent, theme, name, theme.icons.get("folder"));
                 });
             });
         }

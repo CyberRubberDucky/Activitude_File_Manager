@@ -151,7 +151,7 @@ pub fn popup(
             )).with_children(|parent| {
 
                 // ==== Delete Button ==== //
-                default_button("Delete", theme.icons.get("delete").unwrap()).spawn_under(parent, DeleteButton, theme);
+                default_button("Delete", theme.icons.get("delete")).spawn_under(parent, DeleteButton, theme);
 
                 // ==== Spacer ==== //
                 parent.spawn((
@@ -162,10 +162,10 @@ pub fn popup(
                 ));
 
                 // ==== Cancel Button ==== //
-                default_button("Cancel", theme.icons.get("exit").unwrap()).spawn_under(parent, CancelButton, theme);
+                default_button("Cancel", theme.icons.get("exit")).spawn_under(parent, CancelButton, theme);
 
                 // ==== Save Button ==== //
-                default_button("Save", theme.icons.get("save").unwrap()).spawn_under(parent, SaveButton, theme);
+                default_button("Save", theme.icons.get("save")).spawn_under(parent, SaveButton, theme);
 
             });
         });
