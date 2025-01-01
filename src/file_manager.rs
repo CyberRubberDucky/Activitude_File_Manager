@@ -6,6 +6,13 @@ use crate::Folder;
 use crate::EXPAND;
 
 use crate::popup::TextEditor;
+use ramp_ds::layout::{
+    interface::{Interface, Page},
+    header::Header,
+    content::Content,
+    bumper::Bumper,
+    utils::Size
+};
 
 use crate::file_display::object;
 use crate::file_display::FolderState;
@@ -29,120 +36,66 @@ pub struct SearchBar;
 #[derive(Default, Resource)]
 pub struct RootNode(Option<Entity>);
 
-/* -------------- Manager -------------- */
-
 pub fn manager(
     mut commands: Commands,
     theme: Res<Theme>,
 ) {
-
     let root = Folder::new("root", None);
     let mut folder_ui_section: Option<FolderUISection> = None;
-    
-    let root_node = commands
-        .spawn((
+    let mut content = Content::new(JustifyContent::Start);
+
+    content.add_content(move |parent| {
+        parent.spawn((
             Node {
-                width: EXPAND,
-                height: EXPAND,
-                align_items: AlignItems::Start,
+                border: UiRect::all(Val::Px(1.0)),
+                height: Val::Px(48.0), 
+                width: Val::Percent(100.0),
+                align_items: AlignItems::Center, 
                 justify_content: JustifyContent::Start,
-                flex_direction: FlexDirection::Row,
+                padding: UiRect::all(Val::Px(16.0)),
                 ..default()
             },
-            BackgroundColor(theme.colors.background.primary)
-        )).with_children(|parent| {
-            parent.spawn((Node {
-                width: EXPAND,
-                height: EXPAND,
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                flex_direction: FlexDirection::Column,
+            TextInputTextFont(TextFont {
+                font:  theme.fonts.style.text.clone(),
+                font_size: theme.fonts.size.md,
                 ..default()
-            }, Interaction::None)).with_children(|parent| {
+            }),
+            BorderColor(theme.colors.outline.secondary),
+            BackgroundColor(theme.colors.background.primary),
+            TextInputTextColor(TextColor(theme.colors.text.primary)),
+            TextInputInactive(true),
+            TextInputValue("/root/".to_string()),
+            BorderRadius::all(Val::Px(8.0)),
+            FocusPolicy::Block,
+            TextInput,
+            SearchBar,
+        ));
+    });
 
-                // === Header === //
+    let theme = theme.as_ref().clone();
 
-                parent.spawn(Node {
-                    width: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Row,
-                    padding: UiRect::all(Val::Px(24.0)),
-                    ..default()
-                }).with_children(|parent| {
-                    parent.spawn((
-                        Text::new("Web5 File Manager"),
-                        TextFont {
-                            font: theme.fonts.style.heading.clone(),
-                            font_size: theme.fonts.size.h3,
-                            ..default()
-                        },
-                        TextColor(theme.colors.text.heading),
-                    ));
-                });
+    content.add_content(move |parent| {
+        parent.spawn(Node {
+            flex_direction: FlexDirection::Row,
+            justify_content: JustifyContent::Start,
+            align_items: AlignItems::Start,
+            width: Val::Percent(100.0),
+            ..default()
+        }).with_children(|parent| {
+            display_files_and_folders(parent, &root, theme);
+        });
+    });
+    
+    let header = Header::new("Web5 File Manager", Size::Large, None, None, false);
+    let page = Page::new(header, content, None);
+    let mut interface = Interface::new(false, page);
+    interface.spawn_under(&mut commands, theme);
 
-                // === Body === //
-                
-                parent.spawn(Node {
-                    width: EXPAND,
-                    height: EXPAND,
-                    max_width: Val::Px(512.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Start,
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(24.0),
-                    ..default()
-                }).with_children(|parent| {
+    // if let Some(folder_ui_section) = folder_ui_section {
+    //     commands.insert_resource(folder_ui_section);
+    // }
 
-                    // === Text Input to Show current directory === //
-                    
-                    parent.spawn((
-                        Node {
-                            border: UiRect::all(Val::Px(1.0)),
-                            height: Val::Px(48.0), 
-                            width: Val::Percent(100.0),
-                            align_items: AlignItems::Center, 
-                            justify_content: JustifyContent::Start,
-                            padding: UiRect::all(Val::Px(16.0)),
-                            ..default()
-                        },
-                        TextInputTextFont(TextFont {
-                            font:  theme.fonts.style.text.clone(),
-                            font_size: theme.fonts.size.md,
-                            ..default()
-                        }),
-                        BorderColor(theme.colors.outline.secondary),
-                        BackgroundColor(theme.colors.background.primary),
-                        TextInputTextColor(TextColor(theme.colors.text.primary)),
-                        TextInputInactive(true),
-                        TextInputValue("/root/".to_string()),
-                        BorderRadius::all(Val::Px(8.0)),
-                        FocusPolicy::Block,
-                        TextInput,
-                        SearchBar,
-                    ));
-
-                    // === Display all files and folders === //
-                    let files_and_folders_node = parent.spawn(Node {
-                        flex_direction: FlexDirection::Row,
-                        justify_content: JustifyContent::Start,
-                        align_items: AlignItems::Start,
-                        width: Val::Percent(100.0),
-                        ..default()
-                    }).with_children(|parent| {
-                        display_files_and_folders(parent, &root, &theme);
-                    }).id();
-
-                    folder_ui_section = Some(FolderUISection(files_and_folders_node));
-                });
-            });
-        }).id();
-
-    if let Some(folder_ui_section) = folder_ui_section {
-        commands.insert_resource(folder_ui_section);
-    }
-
-    commands.insert_resource(RootNode(Some(root_node)));
+    //commands.insert_resource(RootNode(Some(root_node)));
     commands.insert_resource(root);
     commands.insert_resource(FolderState::new());
 }
@@ -151,7 +104,7 @@ pub fn manager(
 pub fn display_files_and_folders(
     parent: &mut ChildBuilder,
     folder: &Folder,
-    theme: &Res<Theme>,
+    theme: &Theme,
 ) {
 
     // ==== Design Nodes ===== //

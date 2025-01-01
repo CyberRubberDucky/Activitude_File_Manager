@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 
 use crate::Theme;
-use crate::ramp_ds::components::button::default_button;
+use crate::ramp_ds::components::button::secondary_default;
 
 use bevy_simple_text_input::{
     TextInput,
@@ -151,7 +151,7 @@ pub fn popup(
             )).with_children(|parent| {
 
                 // ==== Delete Button ==== //
-                default_button("Delete", theme.icons.get("delete")).spawn_under(parent, DeleteButton, theme);
+                secondary_default("Delete", "delete").spawn_under(parent, DeleteButton, theme);
 
                 // ==== Spacer ==== //
                 parent.spawn((
@@ -162,10 +162,10 @@ pub fn popup(
                 ));
 
                 // ==== Cancel Button ==== //
-                default_button("Cancel", theme.icons.get("exit")).spawn_under(parent, CancelButton, theme);
+                secondary_default("Cancel", "exit").spawn_under(parent, CancelButton, theme);
 
                 // ==== Save Button ==== //
-                default_button("Save", theme.icons.get("save")).spawn_under(parent, SaveButton, theme);
+                secondary_default("Save", "save").spawn_under(parent, SaveButton, theme);
 
             });
         });
