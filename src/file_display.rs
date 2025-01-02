@@ -58,7 +58,7 @@ pub fn update_folder_ui(
 
 pub fn object(
     parent: &mut ChildBuilder, 
-    theme: &Res<Theme>,
+    theme: &Theme,
     name: &str,
     icon: ImageNode,
 ) {

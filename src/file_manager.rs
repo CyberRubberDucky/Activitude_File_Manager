@@ -42,39 +42,18 @@ pub fn manager(
 ) {
     let root = Folder::new("root", None);
     let mut folder_ui_section: Option<FolderUISection> = None;
-    let mut content = Content::new(JustifyContent::Start);
 
-    content.add_content(move |parent| {
-        parent.spawn((
-            Node {
-                border: UiRect::all(Val::Px(1.0)),
-                height: Val::Px(48.0), 
-                width: Val::Percent(100.0),
-                align_items: AlignItems::Center, 
-                justify_content: JustifyContent::Start,
-                padding: UiRect::all(Val::Px(16.0)),
-                ..default()
-            },
-            TextInputTextFont(TextFont {
-                font:  theme.fonts.style.text.clone(),
-                font_size: theme.fonts.size.md,
-                ..default()
-            }),
-            BorderColor(theme.colors.outline.secondary),
-            BackgroundColor(theme.colors.background.primary),
-            TextInputTextColor(TextColor(theme.colors.text.primary)),
-            TextInputInactive(true),
-            TextInputValue("/root/".to_string()),
-            BorderRadius::all(Val::Px(8.0)),
-            FocusPolicy::Block,
-            TextInput,
-            SearchBar,
-        ));
+    let mut content = Content::new(JustifyContent::Start);
+    let header = Header::new("Web5 File Manager", Size::Large, None, None, false);
+    let page = Page::new(header, content, None);
+    let mut interface = Interface::new(false, page);
+    let root_node = interface.spawn_under(&mut commands, &theme);
+
+    content.add(&mut commands, |parent| {
+        text_input(parent, &theme);
     });
 
-    let theme = theme.as_ref().clone();
-
-    content.add_content(move |parent| {
+    let ui_section_bundle = content.add(&mut commands, |parent| {
         parent.spawn(Node {
             flex_direction: FlexDirection::Row,
             justify_content: JustifyContent::Start,
@@ -82,20 +61,20 @@ pub fn manager(
             width: Val::Percent(100.0),
             ..default()
         }).with_children(|parent| {
-            display_files_and_folders(parent, &root, theme);
+            display_files_and_folders(parent, &root, &theme);
         });
     });
-    
-    let header = Header::new("Web5 File Manager", Size::Large, None, None, false);
-    let page = Page::new(header, content, None);
-    let mut interface = Interface::new(false, page);
-    interface.spawn_under(&mut commands, theme);
 
-    // if let Some(folder_ui_section) = folder_ui_section {
-    //     commands.insert_resource(folder_ui_section);
-    // }
+    if let Some(ui_section_bundle) = ui_section_bundle {
+        folder_ui_section = Some(FolderUISection(ui_section_bundle));
+    }
 
-    //commands.insert_resource(RootNode(Some(root_node)));
+    if let Some(folder_ui_section) = folder_ui_section {
+        commands.insert_resource(folder_ui_section);
+    }
+
+    let root = Folder::new("root", None);
+    commands.insert_resource(RootNode(Some(root_node)));
     commands.insert_resource(root);
     commands.insert_resource(FolderState::new());
 }
@@ -214,4 +193,33 @@ pub fn text_input_system(
         }
     }
     
+}
+
+
+pub fn text_input (parent: &mut ChildBuilder, theme: &Theme) {
+    parent.spawn((
+        Node {
+            border: UiRect::all(Val::Px(1.0)),
+            height: Val::Px(48.0), 
+            width: Val::Percent(100.0),
+            align_items: AlignItems::Center, 
+            justify_content: JustifyContent::Start,
+            padding: UiRect::all(Val::Px(16.0)),
+            ..default()
+        },
+        TextInputTextFont(TextFont {
+            font: theme.fonts.style.text.clone(),
+            font_size: theme.fonts.size.md,
+            ..default()
+        }),
+        BorderColor(theme.colors.outline.secondary),
+        BackgroundColor(theme.colors.background.primary),
+        TextInputTextColor(TextColor(theme.colors.text.primary)),
+        TextInputInactive(true),
+        TextInputValue("/root/".to_string()),
+        BorderRadius::all(Val::Px(8.0)),
+        FocusPolicy::Block,
+        TextInput,
+        SearchBar,
+    ));
 }
