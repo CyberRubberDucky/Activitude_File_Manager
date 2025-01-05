@@ -1,9 +1,8 @@
 use bevy::prelude::*;
-
-use crate::Theme;
 use ramp_ds::components::Button;
 use ramp_ds::traits::Component;
 use ramp_ds::prelude::*;
+use crate::Theme;
 
 #[derive(Component)]
 pub struct Popup;

@@ -1,7 +1,6 @@
 
 use bevy::prelude::*;
 use bevy_simple_text_input::TextInputValue;
-
 use ramp_ds::prelude::*;
 use ramp_ds::components::button::Callback;
 
@@ -13,11 +12,11 @@ use crate::file_manager::update_folder_ui;
 use crate::file_manager::UISection;
 
 pub fn popup_system(
-    mut commands: Commands,
     theme: Res<Theme>,
+    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
+    mut commands: Commands,
     mut root: ResMut<Folder>,
     mut folder_state: ResMut<FolderState>,
-    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
     mut text_input_query: Query<&mut TextInputValue, With<TextEditor>>,
     mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
     mut interaction_query: Query<

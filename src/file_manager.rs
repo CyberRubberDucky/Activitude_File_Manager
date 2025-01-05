@@ -1,15 +1,10 @@
 use bevy::prelude::*;
-
-use crate::Theme;
-use crate::popup::popup;
-
 use ramp_ds::prelude::*;
 use ramp_ds::traits::Component;
-
-use crate::objects::{
-    Folder,
-    FilesAndFolders,
-};
+use crate::Theme;
+use crate::popup::popup;
+use crate::objects::Folder;
+use crate::objects::FilesAndFolders;
 
 #[derive(Default, Resource)]
 pub struct RootNode(Option<Entity>);
@@ -57,16 +52,16 @@ pub fn update_folder_ui(
 }
 
 pub fn file_manager(
-    mut root: ResMut<Folder>,
     theme: Res<Theme>,
+    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
+    mut root: ResMut<Folder>,
     mut commands: Commands,
     mut folder_state: ResMut<FolderState>,
-    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
     mut text_input: Query<&mut bevy_simple_text_input::TextInputValue>,
-    mut interaction_query: Query<(
-        &Interaction,
-        &IconTextButton,
-    ), (Changed<Interaction>, With<bevy::prelude::Button>)>,
+    mut interaction_query: Query<
+        (&Interaction, &IconTextButton), 
+        (Changed<Interaction>, With<bevy::prelude::Button>)
+    >,
 ) {
     for (interaction, button) in &mut interaction_query {
         if *interaction == Interaction::Pressed {
