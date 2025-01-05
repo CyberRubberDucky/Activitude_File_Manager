@@ -1,61 +1,44 @@
 use bevy::prelude::*;
 
 use crate::Theme;
+use crate::objects::Folder;
+use crate::objects::File;
 
-use crate::file_display::Folder;
-use crate::file_display::FolderState;
-use crate::file_display::File;
-use crate::file_display::update_folder_ui;
-use crate::file_display::FolderUISection;
+use crate::file_manager::UISection;
+use crate::file_manager::FolderState;
+use crate::file_manager::update_folder_ui;
 
-use crate::context::NewFileButton;
-use crate::context::NewFolderButton;
+use ramp_ds::components::button::Callback;
 
 pub fn context_system(
     mut commands: Commands,
     theme: Res<Theme>,
     mut root: ResMut<Folder>,
-    folder_state: ResMut<FolderState>,
-    folder_ui_section: Res<FolderUISection>,
-    mut file_query: Query<&Interaction, (Changed<Interaction>, With<NewFileButton>)>,
-    mut folder_query: Query<&Interaction, (Changed<Interaction>, With<NewFolderButton>)>,
+    mut folder_state: ResMut<FolderState>,
+    mut interaction_query: Query<
+        (&Interaction, &Callback),
+        (Changed<Interaction>, With<bevy::prelude::Button>),
+    >,
+    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
 ) {
-    for interaction in &mut file_query {
-        if let Interaction::Pressed = *interaction {
+    for (interaction, callback) in &mut interaction_query {
+        if *interaction == Interaction::Pressed {
+            let result = (callback.0)();
 
-            // ==== On File Creation ===== //
-            if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
+            if let Some(current_folder) = root.get(&folder_state.0) {
+                match result.as_str() {
+                    "Create File" => {
+                        let file_name = format!("file{}.txt", current_folder.files.len() + 1);
+                        current_folder.files.insert(file_name.clone(), File::new(file_name));
+                    },
+                    "Create Folder" => {
+                        let folder_name = format!("folder {}", current_folder.subfolders.len() + 1);
+                        current_folder.subfolders.insert(folder_name.clone(), Folder::new(&folder_name, Some(current_folder.name.clone())));
+                    },
+                    _ => continue,
+                }
 
-                // ==== Generate Name ===== //
-
-                let new_file_name = format!("file{}.txt", current_folder.files.len() + 1);
-
-                // ==== Add file to Current Folder ===== //
-
-                current_folder.add_file(File {
-                    name: new_file_name.clone(),
-                    content: String::new(),
-                });
-
-                // ==== Update UI ===== //
-
-                update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
-            }
-        }
-    }
-
-    for interaction in &mut folder_query {
-        if let Interaction::Pressed = *interaction {
-
-            // ==== On Folder Creation ===== //
-
-        
-            if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                let new_folder_name = format!("folder {}", current_folder.subfolders.len() + 1);
-
-                current_folder.add_subfolder(Folder::new(&new_folder_name, Some(folder_state.current_folder.clone())));
-
-                update_folder_ui(&mut commands, folder_ui_section.0, current_folder, &theme);
+                update_folder_ui(&mut commands, &mut folder_state, &folder_ui_query, current_folder.clone(), &theme);
             }
         }
     }

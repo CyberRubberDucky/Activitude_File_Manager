@@ -1,98 +1,77 @@
 
 use bevy::prelude::*;
-
 use bevy_simple_text_input::TextInputValue;
 
-use crate::file_display::Folder;
-use crate::file_display::FolderState;
-use crate::file_display::FolderUISection;
-use crate::file_display::update_folder_ui;
+use ramp_ds::prelude::*;
+use ramp_ds::components::button::Callback;
 
-use crate::popup::Popup;
-use crate::popup::SaveButton;
-use crate::popup::CancelButton;
-use crate::popup::DeleteButton;
-use crate::popup::TextEditor;
+use crate::objects::Folder;
+use crate::file_manager::FolderState;
+use crate::file_manager::update_folder_ui;
+use crate::file_manager::UISection;
 
 use crate::Theme;
+use crate::popup::Popup;
 
 pub fn popup_system(
     mut commands: Commands,
-    mut root: ResMut<Folder>,
-    folder_state: ResMut<FolderState>,
     theme: Res<Theme>,
-    folder_ui_section: Res<FolderUISection>, 
+    mut root: ResMut<Folder>,
+    mut folder_state: ResMut<FolderState>,
+    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
     mut text_input_query: Query<&mut TextInputValue, With<TextEditor>>,
     mut popup_query: Query<(Entity, &Node, &Children), With<Popup>>,
-    mut save_query: Query<&Interaction, (Changed<Interaction>, With<SaveButton>)>,
-    mut cancel_query: Query<&Interaction, (Changed<Interaction>, With<CancelButton>)>,
-    mut delete_query: Query<&Interaction, (Changed<Interaction>, With<DeleteButton>)>,
+    mut interaction_query: Query<
+        (&Interaction, &Callback),
+        (Changed<Interaction>, With<bevy::prelude::Button>),
+    >,
 ) {
-    for interaction in &mut cancel_query {
-        if let Interaction::Pressed = *interaction {
+    for (interaction, callback) in &mut interaction_query {
+        if *interaction == Interaction::Pressed {
+            let result = (callback.0)();
 
-            // ==== Cancel ==== //
-
-            close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
-        }
-    }
-
-    for interaction in &mut save_query {
-        if let Interaction::Pressed = *interaction {
-
-            // ==== Save ==== //
-
-            for text_input in &mut text_input_query {
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                    if let Some(file_name) = &folder_state.current_file_name {
-                        if let Some(file) = current_folder.get_file_mut(file_name) {
-                            file.content = text_input.0.clone();
-                            close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
+            match result.as_str() {
+                "Delete" => {
+                    if let Some(current_folder) = root.get(&folder_state.0) {
+                        if let Some(name) = folder_state.1.clone() {
+                            current_folder.files.remove(&name);
+                        }
+                        folder_state.0 = current_folder.clone();
+                    }
+                }
+                "Save" => {
+                    if let Some(current_folder) = root.get(&folder_state.0) {
+                        if let Some(file_name) = folder_state.1.clone() {
+                            if let Some(file) = current_folder.files.get_mut(&file_name) {
+                                if let Some(text_input) = text_input_query.iter_mut().next() {
+                                    file.content = text_input.0.clone();
+                                    folder_state.0 = current_folder.clone();
+                                }
+                            }
                         }
                     }
                 }
+                "Cancel" => {}
+                _ => continue,
             }
-        }
-    }
 
-
-    for interaction in &mut delete_query {
-        if let Interaction::Pressed = *interaction {
-
-            // ==== Delete ===== //
-
-            if let Some(file_name) = &folder_state.current_file_name {
-                if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-                    current_folder.files.remove(file_name);
-                    close_popup(&mut commands, &mut root, &folder_state, &theme, &folder_ui_section, &mut popup_query);
-                }
-            }
+            close_popup(&mut commands, &mut folder_state, &theme, &folder_ui_query, &mut popup_query);
         }
     }
 }
 
-
-
 pub fn close_popup(
     commands: &mut Commands,
-    root: &mut ResMut<Folder>,
-    folder_state: &ResMut<FolderState>,
+    folder_state: &mut ResMut<FolderState>,
     theme: &Res<Theme>,
-    folder_ui_section: &Res<FolderUISection>, 
+    folder_ui_query: &Query<(Entity, &Parent), With<UISection>>,
     popup_query: &mut Query<(Entity, &Node, &Children), With<Popup>>,
 ) {
-    // ==== Close File Popup ===== //
-
     for (entity, _, children) in popup_query.iter_mut() {
         for child in children.iter() {
             commands.entity(*child).despawn_recursive();
         }
         commands.entity(entity).despawn_recursive();
     }
-
-    // ==== Update UI  ===== //
-
-    if let Some(current_folder) = root.find_folder_mut(&folder_state.current_folder) {
-        update_folder_ui(commands, folder_ui_section.0, current_folder, &theme);
-    }
+    update_folder_ui(commands, folder_state, folder_ui_query, folder_state.0.clone(), theme);
 }
