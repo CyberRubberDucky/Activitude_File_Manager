@@ -5,13 +5,12 @@ use bevy_simple_text_input::TextInputValue;
 use ramp_ds::prelude::*;
 use ramp_ds::components::button::Callback;
 
+use crate::Theme;
+use crate::popup::Popup;
 use crate::objects::Folder;
 use crate::file_manager::FolderState;
 use crate::file_manager::update_folder_ui;
 use crate::file_manager::UISection;
-
-use crate::Theme;
-use crate::popup::Popup;
 
 pub fn popup_system(
     mut commands: Commands,

@@ -1,11 +1,8 @@
 use bevy::prelude::*;
-
-use crate::Theme;
-
-use std::collections::BTreeMap;
-
 use ramp_ds::prelude::*;
 use ramp_ds::traits::Component;
+use std::collections::BTreeMap;
+use crate::Theme;
 use crate::file_manager::UISection;
 
 #[derive(Debug, Clone, PartialEq)]
