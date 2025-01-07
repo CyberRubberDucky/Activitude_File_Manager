@@ -3,7 +3,7 @@ use ramp_ds::prelude::*;
 use ramp_ds::traits::Component;
 use std::collections::BTreeMap;
 use crate::Theme;
-use crate::file_manager::UISection;
+use crate::folder_screen::UISection;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct File {
@@ -19,7 +19,6 @@ impl File {
         }
     }
 }
-
 
 #[derive(Debug, Clone, PartialEq, Resource)]
 pub struct Folder {

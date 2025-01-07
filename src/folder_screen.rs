@@ -1,10 +1,13 @@
 use bevy::prelude::*;
 use ramp_ds::prelude::*;
 use ramp_ds::traits::Component;
+use ramp_ds::components::Button;
+use std::sync::Arc;
 use crate::Theme;
-use crate::popup::popup;
-use crate::objects::Folder;
-use crate::objects::FilesAndFolders;
+use crate::Screen;
+use crate::components::Folder;
+use crate::components::File;
+use crate::components::FilesAndFolders;
 
 #[derive(Default, Resource)]
 pub struct RootNode(Option<Entity>);
@@ -12,10 +15,15 @@ pub struct RootNode(Option<Entity>);
 pub struct FolderState(pub Folder, pub Option<String>);
 #[derive(Component)]
 pub struct UISection;
+#[derive(Component)]
+pub struct OnFolderScreen;
 
-pub fn screen(
+pub fn folder_screen(
     mut commands: Commands,
     theme: Res<Theme>,
+    mut root: ResMut<Folder>,
+    mut folder_state: ResMut<FolderState>,
+    folder_ui_query: Query<(Entity, &Parent), With<UISection>>,
 ) {
     let root_folder = Folder::new("root", None);
     let root = Interface::new(
@@ -27,7 +35,23 @@ pub fn screen(
                 Box::new(FilesAndFolders(root_folder.clone())),
             ]),        
             None
-        )
+        ),
+        Some(vec![
+            Button::context("Create File", "file", Arc::new(|| {
+                if let Some(current_folder) = root.get(&folder_state.0) {
+                    let file_name = format!("file{}.txt", current_folder.files.len() + 1);
+                    current_folder.files.insert(file_name.clone(), File::new(file_name));
+                    update_folder_ui(&mut commands, &mut folder_state, &folder_ui_query, current_folder.clone(), &theme);
+                }
+            })),
+            Button::context("Create Folder", "folder", Arc::new(|| {
+                if let Some(current_folder) = root.get(&folder_state.0) {
+                    let folder_name = format!("folder {}", current_folder.subfolders.len() + 1);
+                    current_folder.subfolders.insert(folder_name.clone(), Folder::new(&folder_name, Some(current_folder.name.clone())));
+                    update_folder_ui(&mut commands, &mut folder_state, &folder_ui_query, current_folder.clone(), &theme);
+                }
+            })),
+        ])
     ).spawn(&mut commands, &theme);
     
     commands.insert_resource(RootNode(Some(root)));
@@ -58,6 +82,7 @@ pub fn file_manager(
     mut commands: Commands,
     mut folder_state: ResMut<FolderState>,
     mut text_input: Query<&mut bevy_simple_text_input::TextInputValue>,
+    mut page_state: ResMut<NextState<Screen>>,
     mut interaction_query: Query<
         (&Interaction, &IconTextButton), 
         (Changed<Interaction>, With<bevy::prelude::Button>)
@@ -88,7 +113,8 @@ pub fn file_manager(
                     if let Some(current_folder) = root.get(&folder_state.0) {
                         if let Some(file) = current_folder.files.get(&button.0).cloned() {
                             folder_state.1 = Some(file.name.clone());
-                            popup(&mut commands, &theme, &file.name, &file.content);
+                            page_state.set(Screen::File);
+                            // popup(&mut commands, &theme, &file.name, &file.content);
                         }
                     }
                 }
